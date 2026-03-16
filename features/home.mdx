@@ -1,0 +1,114 @@
+---
+title: "Home page"
+description: "The landing page of acmcsuf.com, composed of multiple Svelte sections that introduce the club and its teams."
+---
+
+The home page at `acmcsuf.com` is the primary landing page for ACM at CSUF. It is built from a set of Svelte components rendered in sequence, each in its own alternating-background section container.
+
+## Page structure
+
+The root component is `src/routes/(site)/+page.svelte`. It imports and composes five section components:
+
+<CardGroup cols={2}>
+  <Card title="Hero" icon="star">
+    Displays the club tagline, a "Join today!" call-to-action button linking to `/discord`, and an animated orbit of all ten team badges around the ACM capybara mascot.
+  </Card>
+  <Card title="Desc" icon="file-text">
+    Shows the club mission statement alongside the Chip the Capybara illustration and the Google sponsor logo.
+  </Card>
+  <Card title="Teams" icon="users">
+    A preview grid of eight teams (AI, Algo, Design, OSS, Dev, Game Dev, ICPC, Node Buds) with logo icons and one-line descriptions, and a "Discover more" button linking to `/teams`.
+  </Card>
+  <Card title="FAQ" icon="circle-question">
+    Frequently asked questions about joining ACM at CSUF.
+  </Card>
+  <Card title="Lucky" icon="shuffle">
+    A "feeling lucky" section for random navigation.
+  </Card>
+</CardGroup>
+
+## Section alternation
+
+Each section is wrapped in a `div.section-container`. CSS alternates background color using `nth-child(even)` / `nth-child(odd)` with the CSS variables `--acm-odd` and `--acm-even`.
+
+```svelte src/routes/(site)/+page.svelte
+<div class="sections-container">
+  <div class="section-container">  <!-- odd  background -->
+    <Hero />
+  </div>
+  <div class="section-container">  <!-- even background -->
+    <Desc />
+  </div>
+  <div class="section-container">  <!-- odd  background -->
+    <Teams />
+  </div>
+  ...
+</div>
+```
+
+## Hero component
+
+Source: `src/routes/(site)/hero.svelte`
+
+The hero renders a two-column layout on screens ≥ 1000 px wide:
+
+- **Left column** — headline (`"We are the largest Computer Science community at CSUF"`) with a gradient-coloured `"Computer Science"` span, and the join button.
+- **Right column** — the capybara mascot (`/assets/capy-power-solo.svg`) surrounded by ten team badge icons in a CSS `@keyframes spin` orbit animation.
+
+The badge list is defined inline in the component script:
+
+```ts
+const badges = [
+  { title: 'General Team',    src: '/assets/badge-acm.svg',         href: '/teams#general'    },
+  { title: 'AI Team',         src: '/assets/badge-ai.svg',          href: '/teams#ai'         },
+  { title: 'Algo Team',       src: '/assets/badge-algo.svg',        href: '/teams#algo'       },
+  { title: 'Design Team',     src: '/assets/badge-design.svg',      href: '/teams#design'     },
+  { title: 'Dev Team',        src: '/assets/badge-dev.svg',         href: '/teams#dev'        },
+  { title: 'Game Dev Team',   src: '/assets/badge-gamedev.svg',     href: '/teams#gamedev'    },
+  { title: 'ICPC Team',       src: '/assets/badge-icpc.svg',        href: '/teams#icpc'       },
+  { title: 'Marketing Team',  src: '/assets/badge-marketing.svg',   href: '/teams#marketing'  },
+  { title: 'Node Buds Team',  src: '/assets/badge-node-buds.svg',   href: '/teams#nodebuds'   },
+  { title: 'Open Source Team',src: '/assets/badge-open-source.svg', href: '/teams#oss'        },
+];
+```
+
+## Desc component
+
+Source: `src/routes/(site)/desc.svelte`
+
+Displays:
+- An illustration of Chip the Capybara holding a laptop (`/assets/chip-holding-laptop.png`).
+- The club's mission statement: *"Bringing you the true Computer Science Experience."*
+- The Google sponsor logo (`/sponsors/google-logo.png`).
+
+## Teams preview component
+
+Source: `src/routes/(site)/teams.svelte`
+
+Renders team logo icons in a responsive CSS grid (1 → 2 → 3 → 4 columns at breakpoints 640/768/1024 px). Each icon links to its anchor on `/teams`. The grid includes: AI, Algo, Design, OSS, Dev, Game Dev, ICPC, and Node Buds.
+
+## Structured data
+
+The `<svelte:head>` block in `+page.svelte` embeds a `application/ld+json` Schema.org `Organization` record with social media `sameAs` links and alumni references:
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "ACM at CSUF",
+  "url": "https://acmcsuf.com/",
+  "sameAs": [
+    "https://instagram.com/acmcsuf",
+    "https://linkedin.com/company/acm-at-csuf/",
+    "https://www.tiktok.com/@acm_at_csuf",
+    "https://www.youtube.com/channel/UCDMBj0o4V8Cpt0jgsZLNVVg"
+  ]
+}
+```
+
+## Commented-out sections
+
+Two sections are currently commented out in the source but may be re-enabled:
+
+- `<Testimony />` — member testimonials.
+- `<Blog />` — a blog post preview strip on the home page.

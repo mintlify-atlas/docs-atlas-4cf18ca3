@@ -1,0 +1,135 @@
+---
+title: "Data sources"
+description: "How acmcsuf.com fetches and serves data from GitHub Discussions, Google Calendar, Google Drive, and local JSON files."
+---
+
+acmcsuf.com pulls data from four primary sources:
+
+| Source | What it provides |
+|---|---|
+| GitHub Discussions (GraphQL) | Blog posts and newsletter articles |
+| Google Calendar API | Upcoming club events |
+| Google Drive API | Design gallery images |
+| Local JSON files | Board members, shortlinks, FAQ, hackathons |
+
+## Data flow
+
+Data flows from external APIs or local files through server-side modules and into SvelteKit `load` functions, which pass the data as props to `+page.svelte` components.
+
+```text
+External API / Local file
+        │
+        ▼
+  src/lib/server/          ← server-only fetch + transform
+        │
+        ▼
+  src/routes/.../+page.ts  ← SvelteKit load function
+        │
+        ▼
+  src/routes/.../+page.svelte  ← rendered to HTML
+```
+
+## GitHub Discussions (blog)
+
+Blog posts are stored as GitHub Discussions in the `acmcsuf.com` repository under a dedicated category.
+
+The server fetches them using the GitHub GraphQL API:
+
+```typescript src/lib/server/gql/github.ts
+const GRAPHQL_URL = 'https://api.github.com/graphql';
+
+export async function doQuery<T>(query: string): Promise<T> {
+  const r = await fetch(GRAPHQL_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `token ${GH_ACCESS_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ query }),
+  });
+  return (await r.json())['data'] as T;
+}
+```
+
+The blog GraphQL query in `src/lib/server/blog/gql.ts` fetches up to 100 discussions from a specific category, including title, body HTML, author, labels, and timestamps.
+
+Required environment variables: `GH_ACCESS_TOKEN`, `GH_DISCUSSION_CATEGORY_ID`.
+
+## Google Calendar (events)
+
+Club events are fetched from a public Google Calendar using the Google Calendar REST API:
+
+```typescript src/lib/server/events/gcal.ts
+export async function listUpcomingEvents() {
+  const cal = calendar({ version: 'v3', auth: GCAL_API_KEY });
+  return cal.events.list({
+    calendarId: GCAL_ID,
+    timeMin: new Date().toISOString(),
+    maxResults: 100,
+    singleEvents: true,
+    orderBy: 'startTime',
+  });
+}
+```
+
+Raw calendar events are transformed into `ClubEvent` objects by `makeClubEvent()` in `src/lib/server/events/event.ts`. The `fromGCal()` function filters out null results and returns a sorted array.
+
+Required environment variables: `GCAL_API_KEY`, `GCAL_ID`.
+
+## Google Drive (gallery)
+
+Design gallery images are fetched from a Google Drive folder using the Drive API.
+
+Required environment variables: `GDRIVE_GALLERY_API_KEY`, `GDRIVE_GALLERY_FOLDER_ID`.
+
+## Local JSON files
+
+Some data is static and stored directly in the repository as JSON.
+
+### Board member data
+
+Board member records live in `src/lib/public/board/data/`. The `index.ts` exports the combined list of all members, and `types.ts` defines the `BoardMember` interface.
+
+### Shortlinks
+
+`src/lib/public/links/links.json` maps short keys to destination URLs. The shortener hook in `src/hooks.server.ts` checks every incoming request against this map and redirects if a match is found.
+
+```json src/lib/public/links/links.json (excerpt)
+{
+  "github": "https://github.com/acmcsufoss",
+  "discord": "https://discord.gg/jXpUE6bS4s",
+  "issues": "/code/issues"
+}
+```
+
+### Blog sample data
+
+`src/lib/server/blog/data.json` contains sample blog posts used as a fallback when the GitHub API is unavailable (such as during local development without credentials).
+
+## `src/lib/public/` directory
+
+The `public/` directory under `src/lib/` contains code that is safe to run on both the server and the client (i.e., no secret environment variables).
+
+| Directory | Contents |
+|---|---|
+| `blog/` | `BlogPost` type, URL helpers, utility functions |
+| `board/` | Board member types, data loader, utilities |
+| `branding/` | Brand asset metadata |
+| `certificates/` | Certificate types |
+| `confetti/` | Confetti animation helpers |
+| `copy/` | Clipboard copy utilities |
+| `design-gallery/` | Gallery item types |
+| `events/` | `ClubEvent` type definition |
+| `faq/` | FAQ data and types |
+| `gallery/` | Gallery utilities |
+| `hackathons/` | Hackathon data and types |
+| `lc-dailies/` | LeetCode Dailies types |
+| `legacy/` | Backwards-compatible helpers |
+| `links/` | Shortlink JSON and loader |
+| `quiz/` | Quiz question data |
+| `sitemap/` | Sitemap generation helpers |
+| `text-alignment/` | Text alignment utilities |
+
+<Tip>
+If code needs access to environment variables or makes HTTP requests, it belongs in `src/lib/server/`, not `src/lib/public/`. The compiler will error if you import `$env/static/private` from a file that can be loaded on the client.
+</Tip>

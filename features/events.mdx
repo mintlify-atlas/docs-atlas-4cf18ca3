@@ -1,0 +1,123 @@
+---
+title: "Events"
+description: "The events page fetches upcoming club events from Google Calendar and displays them with add-to-calendar links for Google and Outlook."
+---
+
+The events page at `acmcsuf.com/events` displays upcoming ACM at CSUF events sourced from a Google Calendar. Events are fetched server-side using the Google Calendar API v3 and exposed through a JSON data endpoint.
+
+## Data flow
+
+```
+Google Calendar API
+      ↓
+/events/all.json  (SvelteKit API route)
+      ↓
++page.ts load function
+      ↓
++page.svelte → EventList component
+```
+
+The page loader in `src/routes/(site)/events/+page.ts` fetches all upcoming events:
+
+```ts src/routes/(site)/events/+page.ts
+export async function load({ fetch }: PageLoadEvent) {
+  const response = await fetch(`/events/all.json`);
+  const events: ClubEvent[] = await response.json();
+  return { events };
+}
+```
+
+## Data endpoint
+
+| Endpoint | Description |
+|---|---|
+| `/events/all.json` | All upcoming events, sorted by start time |
+| `/events/[query].json` | Events filtered by query parameters |
+
+## Google Calendar integration
+
+Source: `src/lib/server/events/gcal.ts`
+
+The server uses the `@googleapis/calendar` package. Two environment variables must be set:
+
+| Variable | Description |
+|---|---|
+| `GCAL_API_KEY` | Google Calendar API key |
+| `GCAL_ID` | The calendar ID to fetch events from |
+
+The `listUpcomingEvents()` function queries the calendar for up to 100 upcoming single events, ordered by start time:
+
+```ts
+await cal.events.list({
+  calendarId: GCAL_ID,
+  timeMin: new Date().toISOString(),
+  maxResults: 100,
+  singleEvents: true,
+  orderBy: 'startTime',
+  showDeleted: false,
+});
+```
+
+## Event parsing
+
+Source: `src/lib/server/events/event.ts`
+
+Raw Google Calendar events are transformed into `ClubEvent` objects. The transformation extracts several fields from the event description using a variable syntax (`ACM_TEAM=algo`, `ACM_PATH=algo`):
+
+```ts
+export interface ClubEvent {
+  month: string;      // e.g. "April"
+  day: number;
+  startTime: string;  // e.g. "6:00 PM"
+  endTime: string;
+  hasStarted: boolean;
+  hasEnded: boolean;
+  date: string;       // ISO ZonedDateTime string
+  location: string;   // e.g. "Discord", "Zoom", room number
+  title: string;
+  description: string;
+  summary: string;
+  meetingLink: string;
+  id: string;         // slug derived from title + date
+  selfLink: string;   // https://acmcsuf.com/events#<id>
+  recurring: boolean;
+  team: string;       // derived from ACM_TEAM variable
+  calendarLinks: {
+    google: string;
+    outlook: string;
+  };
+}
+```
+
+### Location parsing
+
+The `parseLocation()` function interprets the raw `location` field:
+
+- URLs containing `zoom.us` → `location: "Zoom"`, meeting link is the URL.
+- Any other `https://` URL → `location: "TBD"`, meeting link is the URL.
+- Plain text (e.g. a room number) → used as the location string.
+- Empty → defaults to `"TBD"`.
+
+### ACM variables in event descriptions
+
+Event descriptions may embed key-value variables prefixed with `ACM_`:
+
+```
+ACM_TEAM=algo
+ACM_PATH=workshops
+```
+
+These are stripped from the displayed description and used to tag the event with a team ID.
+
+## Recurring events
+
+The `recurring` flag is set to `true` when the raw Google Calendar event has a non-empty `recurrence` array. The page displays recurring events alongside one-off events.
+
+## Third-party calendar links
+
+Each event includes pre-built add-to-calendar links:
+
+- **Google Calendar** — `https://calendar.google.com/calendar/render?action=TEMPLATE&...`
+- **Outlook Live** — `https://outlook.live.com/calendar/0/deeplink/compose?...`
+
+Both links are constructed in `makeGoogleCalendarLink()` and `makeOutlookCalendarLink()` using the event's title, description, location, and start/end times.

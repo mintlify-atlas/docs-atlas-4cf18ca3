@@ -1,0 +1,122 @@
+---
+title: "Branding"
+description: "The branding page at acmcsuf.com/branding provides logos, brand colors, and asset download links for all ACM at CSUF teams."
+---
+
+The branding page at `acmcsuf.com/branding` is the central resource for ACM at CSUF brand assets. It displays logo files and brand colours for every team, with SVG and PNG download links.
+
+## Page structure
+
+Source: `src/routes/(site)/branding/+page.svelte`
+
+The page imports the `Branding_Details` array from `data.ts` and renders a `<TeamCard>` (`branding-card.svelte`) for each entry. A header section shows the Boardify capybara illustration (`/assets/figma-capy.svg`) alongside the page title and description.
+
+The page footer links to:
+- `/global.css` — the global stylesheet, useful for colour variable reference.
+
+## Data structure
+
+Defined in `src/lib/public/branding/branding.ts`:
+
+```ts
+export interface Branding {
+  title: string;        // team display name
+  description: string;  // team description
+  teamLogo: TeamLogo;
+  teamColor: TeamColor;
+}
+
+export interface TeamLogo {
+  image: string;  // path to image for display
+  alt: string;    // alt text
+  title: string;  // human-readable logo title
+  svg: string;    // path to SVG asset for download
+  png: string;    // path to PNG asset for download
+}
+
+export interface TeamColor {
+  name: string;   // colour name, e.g. "Primary Blue"
+  hex: string;    // hex value, e.g. "#06a3ff"
+  rgb: string;    // RGB values, e.g. "6, 163, 255"
+}
+```
+
+## Team brand assets
+
+Defined in `src/routes/(site)/branding/data.ts`:
+
+<Accordion title="General">
+  - **Colour:** Primary Blue — `#06a3ff` (RGB: 6, 163, 255)
+  - **SVG:** `/assets/general-logo.svg`
+  - **PNG:** `/assets/general-logo.png`
+</Accordion>
+
+<Accordion title="AI">
+  - **Colour:** AI Green — `#35e792` (RGB: 53, 231, 146)
+  - **SVG:** `/assets/ai-logo.svg`
+  - **PNG:** `/assets/ai-logo.png`
+</Accordion>
+
+<Accordion title="Algo">
+  - **Colour:** Algo Purple — `#af3fff` (RGB: 175, 63, 255)
+  - **SVG:** `/assets/algo-logo.svg`
+  - **PNG:** `/assets/algo-logo.png`
+</Accordion>
+
+<Accordion title="Design">
+  - **Colour:** Design Red — `#ff406d` (RGB: 255, 64, 109)
+  - **SVG:** `/assets/design-logo.svg`
+  - **PNG:** `/assets/design-logo.png`
+</Accordion>
+
+<Accordion title="Dev">
+  - **Colour:** Dev Blue — `#1F6CFF` (RGB: 31, 108, 255)
+  - **SVG:** `/assets/dev-logo.svg`
+  - **PNG:** `/assets/dev-logo.png`
+</Accordion>
+
+<Accordion title="Game Dev">
+  - **Colour:** Game Dev Red — `#D41253` (RGB: 212, 18, 83)
+  - **SVG:** `/assets/gamedev-logo.svg`
+  - **PNG:** `/assets/gamedev-logo.png`
+</Accordion>
+
+<Accordion title="ICPC">
+  - **Colour:** ICPC Orange — `#FF7918` (RGB: 255, 121, 24)
+  - **SVG:** `/assets/icpc-logo.svg`
+</Accordion>
+
+<Accordion title="Marketing">
+  - **Colour:** Marketing Pink — `#FE0FC9` (RGB: 254, 15, 201)
+  - **SVG:** `/assets/marketing-logo.svg`
+  - **PNG:** `/assets/marketing-logo.png`
+</Accordion>
+
+<Accordion title="Node Buds">
+  - **Colour:** Node Buds Red — `#D41253` (RGB: 212, 18, 83)
+  - **SVG:** `/assets/nodebuds-logo-old.svg`
+  - **PNG:** `/assets/nodebuds-logo-old.png`
+</Accordion>
+
+<Accordion title="Open Source">
+  - **Colour:** OS Green — `#13d4b1` (RGB: 19, 212, 177)
+  - **SVG:** `/assets/oss-logo.svg`
+  - **PNG:** `/assets/oss-logo.png`
+</Accordion>
+
+## Adding or updating branding
+
+<Steps>
+  <Step title="Add asset files">
+    Place the new or updated SVG and PNG logo files in the `static/assets/` directory.
+  </Step>
+  <Step title="Update data.ts">
+    Open `src/routes/(site)/branding/data.ts` and update the relevant entry — or append a new `Branding` object for a new team — with the correct asset paths and colour values.
+  </Step>
+  <Step title="Update the type if needed">
+    If you are adding a new field to the `Branding`, `TeamLogo`, or `TeamColor` interfaces, update `src/lib/public/branding/branding.ts` and the `branding-card.svelte` component accordingly.
+  </Step>
+  <Step title="Submit a pull request">
+    Open a PR against `main`. Changes go live after merge and deployment.
+  </Step>
+</Steps>

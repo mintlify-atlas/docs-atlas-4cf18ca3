@@ -1,0 +1,103 @@
+---
+title: "Routes"
+description: "How SvelteKit file-based routing works in acmcsuf.com and a complete list of all production URLs."
+---
+
+acmcsuf.com uses [SvelteKit's file-based routing](https://kit.svelte.dev/docs/routing). Every file with a `+` prefix inside `src/routes/` becomes an endpoint. All site pages live inside the `(site)` route group, which acts as a layout wrapper without affecting the URL.
+
+## File conventions
+
+| File | Purpose |
+|---|---|
+| `+page.svelte` | The UI component rendered for that route |
+| `+page.ts` | Runs on server and client to load data before the page renders |
+| `+layout.svelte` | Wraps all child routes with shared UI (nav, footer) |
+| `+error.svelte` | Displayed when a page throws an error |
+
+<Note>
+The root `+layout.svelte` at `src/routes/(site)/+layout.svelte` is rendered around every page on the site. It includes the top navigation bar and footer.
+</Note>
+
+## Dynamic routes
+
+SvelteKit uses square-bracket syntax for dynamic segments:
+
+| Pattern | Example URL | Matched value |
+|---|---|---|
+| `[id]` | `/blog/42` | `id = "42"` |
+| `[team]` | `/workshops/dev` | `team = "dev"` |
+| `[season_id]` | `/lc-dailies/2024-spring` | `season_id = "2024-spring"` |
+| `[username]` | `/@ethanthatonekid` | `username = "ethanthatonekid"` |
+| `[repo_name]` | `/@ethanthatonekid/acmcsuf.com` | `repo_name = "acmcsuf.com"` |
+
+<Note>
+The `[x+40]` prefix in `[x+40][username]` is SvelteKit's encoding for the `@` character (Unicode code point 40 in hex). This maps the `/@username` URL pattern.
+</Note>
+
+## Route table
+
+| File path | Production URL |
+|---|---|
+| `src/routes/(site)/+page.svelte` | `https://acmcsuf.com/` |
+| `src/routes/(site)/blog/+page.svelte` | `https://acmcsuf.com/blog` |
+| `src/routes/(site)/blog/[id]/` | `https://acmcsuf.com/blog/:id` |
+| `src/routes/(site)/blog/[id].txt/` | `https://acmcsuf.com/blog/:id.txt` |
+| `src/routes/(site)/blog/[query].json/` | `https://acmcsuf.com/blog/:query.json` |
+| `src/routes/(site)/events/+page.svelte` | `https://acmcsuf.com/events` |
+| `src/routes/(site)/events/[query].json/` | `https://acmcsuf.com/events/:query.json` |
+| `src/routes/(site)/teams/+page.svelte` | `https://acmcsuf.com/teams` |
+| `src/routes/(site)/workshops/+page.svelte` | `https://acmcsuf.com/workshops` |
+| `src/routes/(site)/workshops/[team]/` | `https://acmcsuf.com/workshops/:team` |
+| `src/routes/(site)/workshops/[team]/[semester]/` | `https://acmcsuf.com/workshops/:team/:semester` |
+| `src/routes/(site)/hackathons/+page.svelte` | `https://acmcsuf.com/hackathons` |
+| `src/routes/(site)/lc-dailies/+page.svelte` | `https://acmcsuf.com/lc-dailies` |
+| `src/routes/(site)/lc-dailies/[season_id]/` | `https://acmcsuf.com/lc-dailies/:season_id` |
+| `src/routes/(site)/boardify/+page.svelte` | `https://acmcsuf.com/boardify` |
+| `src/routes/(site)/branding/+page.svelte` | `https://acmcsuf.com/branding` |
+| `src/routes/(site)/gallery/+page.svelte` | `https://acmcsuf.com/gallery` |
+| `src/routes/(site)/shorter/+page.svelte` | `https://acmcsuf.com/shorter` |
+| `src/routes/(site)/quiz/+page.svelte` | `https://acmcsuf.com/quiz` |
+| `src/routes/(site)/privacy/+page.svelte` | `https://acmcsuf.com/privacy` |
+| `src/routes/(site)/colors/+page.svelte` | `https://acmcsuf.com/colors` |
+| `src/routes/(site)/design-gallery/+page.svelte` | `https://acmcsuf.com/design-gallery` |
+| `src/routes/(site)/genuary/+page.svelte` | `https://acmcsuf.com/genuary` |
+| `src/routes/(site)/portfolios/+page.svelte` | `https://acmcsuf.com/portfolios` |
+| `src/routes/(site)/faq.svelte` | FAQ section (embedded in layout) |
+| `src/routes/(site)/random/+page.svelte` | `https://acmcsuf.com/random` |
+| `src/routes/(site)/sitemap/+page.svelte` | `https://acmcsuf.com/sitemap` |
+| `src/routes/(site)/feed.xml/+page.svelte` | `https://acmcsuf.com/feed.xml` |
+| `src/routes/(site)/1st/+page.svelte` | `https://acmcsuf.com/1st` |
+| `src/routes/(site)/[x+40][username]/+page.svelte` | `https://acmcsuf.com/@:username` |
+| `src/routes/(site)/[x+40][username]/[repo_name]/` | `https://acmcsuf.com/@:username/:repo_name` |
+| `src/routes/(site)/[x+40][username]/[repo_name].json/` | `https://acmcsuf.com/@:username/:repo_name.json` |
+| `src/routes/(site)/[...id=link].svg/` | `https://acmcsuf.com/:shortlink.svg` (QR code) |
+
+## Data loading with `+page.ts`
+
+Routes that need server data define a `load` function in a `+page.ts` file:
+
+```typescript src/routes/(site)/events/+page.ts
+import type { PageLoad } from './$types';
+
+export const load: PageLoad = async ({ fetch }) => {
+  const response = await fetch('/events/upcoming.json');
+  const events = await response.json();
+  return { events };
+};
+```
+
+The returned object is passed as `data` props to the corresponding `+page.svelte`.
+
+## Server hooks
+
+Before any route renders, `src/hooks.server.ts` intercepts every request. It runs two handlers in sequence:
+
+1. **`shortener()`** — checks if the URL matches a shortlink in `links.json` and redirects if so
+2. **`handleTheme`** — reads the `theme` cookie and injects `data-theme` into the HTML for light/dark mode
+
+```typescript src/hooks.server.ts
+import { sequence } from '@sveltejs/kit/hooks';
+import { shortener } from '$lib/server/links/shortener';
+
+export const handle = sequence(shortener(), handleTheme);
+```

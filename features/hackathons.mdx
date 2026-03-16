@@ -1,0 +1,103 @@
+---
+title: "Hackathons"
+description: "The hackathons page chronicles every TuffyHacks and FullyHacks event, grouped by year, with director profiles and event metadata."
+---
+
+The hackathons page at `acmcsuf.com/hackathons` showcases the history of ACM at CSUF's annual hackathon series. Events are grouped by year with alternating section backgrounds and a year quick-navigation strip.
+
+## Hackathon history
+
+| Year | Event | Location | Theme |
+|---|---|---|---|
+| 2021 | TuffyHacks 2021 | Virtual | Camping |
+| 2022 | TuffyHacks 2022 | Virtual | Cyberpunk |
+| 2023 | FullyHacks 2023 | CSUF (in-person) | Party |
+| 2024 | FullyHacks 2024 | CSUF (in-person) | Neon |
+| 2025 | FullyHacks 2025 | CSUF (in-person) | Space |
+
+## Data structure
+
+Defined in `src/lib/public/hackathons/hackathon.ts`:
+
+```ts
+export interface Hackathon {
+  id: string;          // unique slug, e.g. "fullyhacks2025"
+  title: string;       // display title
+  date: string;        // e.g. "April 2025"
+  location: string;    // venue name
+  theme: string;       // hackathon theme
+  description: string; // narrative description
+  directors: Director[];
+}
+
+export interface Director {
+  name: string;        // full name
+  picture: string;     // path under /people/, e.g. "/people/eric-ly.webp"
+}
+```
+
+## Hackathon data file
+
+All events are defined as a typed `const` array in `src/routes/(site)/hackathons/data.ts`:
+
+```ts
+import type { Hackathon } from '$lib/public/hackathons';
+
+export default [
+  {
+    id: 'fullyhacks2025',
+    title: 'FullyHacks 2025',
+    date: 'April 2025',
+    location: 'California State University, Fullerton',
+    theme: 'Space',
+    description: '...',
+    directors: [
+      { name: 'Eric Ly',           picture: '/people/eric-ly.webp' },
+      { name: 'Esteban Escartin',  picture: '/people/esteban-escartin.webp' },
+      { name: 'Joel Daniel Rico',  picture: '/people/joel-daniel-rico.webp' },
+      { name: 'Sama Ahmed',        picture: '/people/sama-ahmed.webp' },
+    ],
+  },
+  // ...
+] as const satisfies Hackathon[];
+```
+
+## Adding a new hackathon
+
+<Steps>
+  <Step title="Collect the event details">
+    Gather the hackathon's `id`, `title`, `date`, `location`, `theme`, `description`, and the list of directors with photo filenames.
+  </Step>
+  <Step title="Add director photos">
+    Place each director's headshot in `static/people/` as a `.webp` file. Use a lowercase hyphenated filename that matches the `picture` field (e.g. `static/people/jane-doe.webp`).
+  </Step>
+  <Step title="Append to data.ts">
+    Open `src/routes/(site)/hackathons/data.ts` and add the new entry to the exported array:
+
+    ```ts
+    {
+      id: 'fullyhacks2026',
+      title: 'FullyHacks 2026',
+      date: 'April 2026',
+      location: 'California State University, Fullerton',
+      theme: 'Ocean',
+      description: 'Description of the event...',
+      directors: [
+        { name: 'Jane Doe', picture: '/people/jane-doe.webp' },
+      ],
+    },
+    ```
+  </Step>
+  <Step title="Submit a pull request">
+    Open a PR against `main`. The new hackathon will appear on the page once merged and deployed, sorted into the correct year group automatically.
+  </Step>
+</Steps>
+
+## Page behaviour
+
+The page component (`src/routes/(site)/hackathons/+page.svelte`) groups hackathons by year extracted from the `date` string, then:
+
+1. Renders a year section for each year in descending order.
+2. Shows the page header (title, caption, year navigation pills) only in the **first** section.
+3. Alternates section background colors using `--acm-odd` / `--acm-even` CSS variables.
+4. Clicking a year pill smoothly scrolls to the first hackathon of that year.

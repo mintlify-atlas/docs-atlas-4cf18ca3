@@ -1,0 +1,77 @@
+---
+title: "Contributing overview"
+description: "End-to-end guide for contributing to acmcsuf.com, from forking the repo to merging your PR."
+---
+
+<Note>
+  By participating in this project you agree to follow the project's code of
+  conduct. Please be respectful and constructive in all interactions.
+</Note>
+
+## Contribution workflow
+
+The standard workflow for contributing a change to acmcsuf.com:
+
+1. **Fork** the repository to your GitHub account.
+2. **Clone** your fork locally.
+3. **Create a branch** — never work directly on `main`.
+4. **Code** your changes, writing unit tests where applicable.
+5. **Run `npm run all`** to lint, format, type-check, build, and test.
+6. **Commit and push** your branch to your fork.
+7. **Open a pull request** against the upstream `main` branch.
+
+## Before you submit
+
+Every PR must pass the full quality gate before it can be merged. Run this
+command and fix any errors it reports:
+
+```bash
+npm run all
+```
+
+This single command executes the following checks in order:
+
+| Step | Script | What it does |
+|---|---|---|
+| 1 | `npm run lint` | Runs ESLint and auto-fixes issues |
+| 2 | `npm run format` | Runs Prettier and auto-formats files |
+| 3 | `npm run check` | Checks for TypeScript errors and unused CSS |
+| 4 | `npm run build` | Builds the site (confirms no build errors) |
+| 5 | `npm test` | Runs all unit tests with Vitest |
+
+<Warning>
+  `npm run lint` and `npm run format` may **mutate your files**. Review the
+  changes before committing them.
+</Warning>
+
+## All npm scripts
+
+| Script | Description |
+|---|---|
+| `npm start` / `npm run dev` | Start the local development server |
+| `npm run build` | Build the site for production |
+| `npm run build:prod` | Build the site in production mode |
+| `npm run preview` | Build and run the production version locally via Wrangler |
+| `npm test` | Run all unit tests |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:size` | Build and check bundle size against limits |
+| `npm run test:coverage` | Run tests and generate a coverage report |
+| `npm run check` | Check for type errors, unused CSS, and more |
+| `npm run lint` | Run ESLint with auto-fix |
+| `npm run format` | Run Prettier with auto-write |
+| `npm run all` | Run all checks required for a release deployment |
+| `npm run host` | Run `npm run all` then host the production build locally |
+| `npm run deploy` | Build for production and deploy via Wrangler |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Submitting a pull request" icon="code-pull-request" href="/contributing/submitting-a-pr">
+    Learn PR title requirements, description checklist, squash merge rules, and
+    reviewer etiquette.
+  </Card>
+  <Card title="Environment setup" icon="gear" href="/contributing/environment-setup">
+    Configure your `.env` file with GitHub tokens, Google API keys, and Discord
+    bot variables.
+  </Card>
+</CardGroup>

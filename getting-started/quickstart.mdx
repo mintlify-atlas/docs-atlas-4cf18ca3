@@ -1,0 +1,71 @@
+---
+title: "Quickstart"
+description: "Get the acmcsuf.com development server running on your machine in minutes."
+---
+
+<Note>
+  Some pages (like `/blog`) require third-party credentials to display data. See
+  the [Local setup](/getting-started/local-setup) guide for `.env` configuration
+  before running the site.
+</Note>
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone the main repository (or your fork) to your local machine.
+
+    <CodeGroup>
+      ```bash Clone via HTTPS
+      git clone https://github.com/acmcsufoss/acmcsuf.com.git
+      cd acmcsuf.com
+      ```
+
+      ```bash Clone your fork
+      git clone https://github.com/YOUR_USERNAME/acmcsuf.com.git
+      cd acmcsuf.com
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Install dependencies">
+    Install all project dependencies using npm.
+
+    ```bash
+    npm i
+    ```
+  </Step>
+
+  <Step title="Start the development server">
+    Spin up the local development server.
+
+    <CodeGroup>
+      ```bash Using npm start
+      npm start
+      ```
+
+      ```bash Using npm run dev
+      npm run dev
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Open the site">
+    Navigate to [http://localhost:5173/](http://localhost:5173/) in your browser.
+    The page reloads automatically whenever you save a source file.
+  </Step>
+</Steps>
+
+## Key npm scripts
+
+| Script | Description |
+|---|---|
+| `npm start` / `npm run dev` | Start the local development server |
+| `npm run build` | Build the site for production |
+| `npm run preview` | Build and preview the production version locally via Wrangler |
+| `npm test` | Run all unit tests |
+| `npm run test:coverage` | Run tests and generate a code coverage report |
+| `npm run check` | Check for type errors, unused CSS, and more |
+| `npm run lint` | Run the linter (may auto-fix files) |
+| `npm run format` | Run the auto-formatter (may mutate files) |
+| `npm run all` | Run lint, format, check, build, and tests — required before submitting a PR |
+| `npm run host` | Run `npm run all` then host the production build locally |
+| `npm run deploy` | Build for production and deploy via Wrangler |

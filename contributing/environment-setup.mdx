@@ -1,0 +1,139 @@
+---
+title: "Environment setup"
+description: "Configure every environment variable required to run and develop acmcsuf.com locally."
+---
+
+## Overview
+
+The project reads runtime configuration from a `.env` file in the repository
+root. This file is listed in `.gitignore` and is never committed.
+
+Start by copying the example file:
+
+```bash
+cp .env.example .env
+```
+
+Then fill in the values you need based on the features you are working on.
+
+<Tip>
+  If you are only running tests and not working on a page that fetches
+  third-party data, you do not need real credentials. Copy `.env.example` to
+  `.env` as-is, and define any missing variables as empty strings
+  (`VARIABLE_NAME=""`).
+</Tip>
+
+## Full `.env` structure
+
+```sh .env
+# Enable debug mode (set to 1 for local development)
+DEBUG_FLAG_ENABLED=1
+
+# GitHub — required for /blog and other GitHub-sourced pages
+GH_DISCUSSION_CATEGORY_ID="DIC_kwDOE7ysSc4CAC0o"
+GH_ACCESS_TOKEN="YOUR_PAT"
+
+# Google Calendar — required for the calendar page
+GCAL_API_KEY=""
+GCAL_ID=""
+
+# Google Drive gallery — required for the gallery page
+GDRIVE_GALLERY_API_KEY=""
+GDRIVE_GALLERY_FOLDER_ID=""
+
+# Cloudflare — required for deployment only
+CLOUDFLARE_ACCOUNT_ID=""
+```
+
+### Discord bot variables
+
+Some scripts that are used indirectly by the project (e.g., automated issue
+channels via GitHub Actions) require Discord bot credentials:
+
+```sh
+DISCORD_BOT_TOKEN=YOUR_BOT_TOKEN
+GUILD_ID=YOUR_GUILD_ID
+HUB_ID=YOUR_HUB_CHANNEL_ID
+ARCHIVE_CHANNEL_ID=YOUR_ARCHIVE_CHANNEL_ID
+```
+
+These are not needed for normal local development of the website itself.
+
+## Variable reference
+
+### `DEBUG_FLAG_ENABLED`
+
+Set to `1` to enable debug mode. The `.env.example` ships with this enabled so
+that you get extra diagnostic information during local development.
+
+### `GH_ACCESS_TOKEN`
+
+A personal GitHub access token (PAT) used to:
+
+- Authenticate requests to the GitHub REST and GraphQL APIs.
+- Prevent hitting the unauthenticated rate limit when fetching data such as
+  blog posts from GitHub Discussions.
+
+**How to generate a PAT:**
+
+<Steps>
+  <Step title="Open GitHub token settings">
+    Go to [github.com/settings/tokens](https://github.com/settings/tokens) and
+    click **Generate new token**.
+  </Step>
+  <Step title="Select scopes">
+    For read-only public data (blog posts, discussions), no scopes are strictly
+    required — a token with no scopes still raises the API rate limit. Add
+    `read:discussion` if you need to access private discussion data.
+  </Step>
+  <Step title="Copy and save the token">
+    Copy the generated token immediately — GitHub will not show it again.
+    Paste it as the value of `GH_ACCESS_TOKEN` in your `.env` file.
+  </Step>
+</Steps>
+
+<Warning>
+  **Never commit your PAT.** The `.env` file is already excluded by `.gitignore`,
+  but double-check before running `git add`. Exposing a PAT in a public
+  repository is a security risk and GitHub will automatically revoke it.
+</Warning>
+
+### `GH_DISCUSSION_CATEGORY_ID`
+
+The GraphQL node ID of the GitHub Discussions category used as the source for
+`/blog` posts (the `Newsletter` category). The correct value for the main
+repository is already pre-filled in `.env.example`:
+
+```
+GH_DISCUSSION_CATEGORY_ID=DIC_kwDOE7ysSc4CAC0o
+```
+
+You can browse the discussions at
+[github.com/acmcsufoss/acmcsuf.com/discussions/categories/newsletter](https://github.com/acmcsufoss/acmcsuf.com/discussions/categories/newsletter).
+
+### `GCAL_API_KEY` and `GCAL_ID`
+
+Google Calendar API credentials used to fetch event data for the calendar page.
+Leave these empty if you are not working on calendar-related features.
+
+### `GDRIVE_GALLERY_API_KEY` and `GDRIVE_GALLERY_FOLDER_ID`
+
+Google Drive credentials for loading images in the photo gallery. Leave empty
+if you are not working on the gallery.
+
+### `CLOUDFLARE_ACCOUNT_ID`
+
+Required only when deploying via Wrangler (`npm run deploy`). Leave empty for
+local development.
+
+### Discord bot variables
+
+| Variable | Description |
+|---|---|
+| `DISCORD_BOT_TOKEN` | Authentication token for the Discord bot used by GitHub Actions workflows |
+| `GUILD_ID` | The Discord server (guild) ID where issue channels are created |
+| `HUB_ID` | The channel ID of the hub channel where new issue channels are announced |
+| `ARCHIVE_CHANNEL_ID` | The channel ID where closed issue channel transcripts are archived |
+
+These variables are only needed if you are working on the Discord automation
+scripts (`scripts/create-issue-channel.js`, `scripts/close-issue-channel.js`).

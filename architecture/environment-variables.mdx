@@ -1,0 +1,108 @@
+---
+title: "Environment variables"
+description: "All environment variables used by acmcsuf.com, their purpose, and whether they are required."
+---
+
+Environment variables are loaded by SvelteKit via `$env/static/private`. They are only accessible in server-side code — you cannot import them in `+page.svelte` or any file in `src/lib/public/`.
+
+The `src/lib/server/env/` module re-exports all variables with a clear split between required and optional:
+
+```text
+src/lib/server/env/
+├── index.ts       # Re-exports both, warns on missing required vars
+├── required.ts    # Variables that must be set for the app to work
+└── optional.ts    # Variables that enable optional features
+```
+
+If a required variable is missing, the server logs a warning at startup:
+
+```text
+Missing required environment variable: GH_ACCESS_TOKEN
+```
+
+## Setting up environment variables
+
+<Steps>
+  <Step title="Copy the example file">
+    ```bash
+    cp .env.example .env
+    ```
+  </Step>
+  <Step title="Fill in the values">
+    Open `.env` and set each variable. See the table below for descriptions.
+  </Step>
+  <Step title="For production deployments">
+    Create a `.env.production` file. The `wrangler.toml` `[env.production]` section uses this file when deploying to `acmcsuf.com`.
+  </Step>
+</Steps>
+
+<Warning>
+Never commit `.env` or `.env.production` to the repository. Both files are listed in `.gitignore`.
+</Warning>
+
+## Required variables
+
+These variables must be set for full site functionality.
+
+| Variable | Description |
+|---|---|
+| `GH_ACCESS_TOKEN` | GitHub personal access token with `read:discussion` scope. Used to fetch blog posts from GitHub Discussions via the GraphQL API. |
+| `GH_DISCUSSION_CATEGORY_ID` | The GraphQL node ID of the GitHub Discussions category used for blog posts (e.g. `DIC_kwDOE7ysSc4CAC0o`). |
+| `GCAL_API_KEY` | Google Calendar API key. Used to fetch upcoming club events. |
+| `GCAL_ID` | The Google Calendar ID to fetch events from. |
+| `GDRIVE_GALLERY_API_KEY` | Google Drive API key. Used to fetch design gallery images. |
+| `GDRIVE_GALLERY_FOLDER_ID` | The Google Drive folder ID that contains gallery images. |
+
+## Optional variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `DEBUG_FLAG_ENABLED` | `0` | Set to `1` to enable debug mode. Enables additional logging and development-only UI. |
+
+## `.env.example`
+
+The repository includes a `.env.example` file as a reference:
+
+```bash .env.example
+DEBUG_FLAG_ENABLED=1
+
+GH_DISCUSSION_CATEGORY_ID="DIC_kwDOE7ysSc4CAC0o"
+GH_ACCESS_TOKEN="your-token-here"
+
+GCAL_API_KEY=""
+GCAL_ID=""
+GDRIVE_GALLERY_API_KEY=""
+GDRIVE_GALLERY_FOLDER_ID=""
+
+CLOUDFLARE_ACCOUNT_ID=""
+```
+
+## Using variables in server code
+
+Import from `$lib/server/env` rather than directly from `$env/static/private`. This centralizes the variable declarations and lets the startup warning code run:
+
+```typescript
+import { GH_ACCESS_TOKEN, GCAL_API_KEY } from '$lib/server/env';
+import { DEBUG_FLAG_ENABLED } from '$lib/server/flags';
+```
+
+<Note>
+`src/lib/server/flags/index.ts` wraps `DEBUG_FLAG_ENABLED` through `parseBool()` so you get a proper boolean instead of the raw string `"1"` or `"0"`.
+</Note>
+
+## Production environment
+
+For production deployments via Wrangler, create a `.env.production` file at the project root. The `wrangler.toml` `[env.production]` block routes traffic for `acmcsuf.com` and reads from this file:
+
+```toml wrangler.toml
+[env.production]
+routes = [
+  { pattern = "acmcsuf.com", custom_domain = true }
+]
+```
+
+Deploy to production with:
+
+```bash
+wrangler deploy -e production
+```

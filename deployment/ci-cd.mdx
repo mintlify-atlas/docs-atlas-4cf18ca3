@@ -1,0 +1,198 @@
+---
+title: "CI/CD pipeline"
+description: "GitHub Actions workflows that automate testing, size checks, and Cloudflare deployments for acmcsuf.com."
+---
+
+## Overview
+
+acmcsuf.com uses GitHub Actions for continuous integration and Cloudflare's native GitHub integration for continuous deployment. Every change pushed to `main` is automatically built, tested, and promoted from preview to production.
+
+## Automated deployment flow
+
+```
+Push to main
+    │
+    ▼
+GitHub Actions: Website Check
+    │  ├── svelte-check
+    │  ├── format & lint
+    │  ├── vitest tests
+    │  └── size-limit check (_worker.js ≤ 50 KB)
+    │
+    ▼ (all checks pass)
+Cloudflare builds the site
+    │
+    ▼
+Preview deployment created
+    │
+    ▼
+Promotion to production (acmcsuf.com)
+```
+
+For pull requests, Cloudflare creates a preview deployment and posts the preview URL as a PR comment. The preview updates on every subsequent commit to the branch.
+
+## Workflow files
+
+All workflows live under `.github/workflows/`.
+
+<CardGroup cols={3}>
+  <Card title="check_website.yaml" icon="circle-check">
+    Runs on push to `main` and on pull requests. Validates the full build, code style, tests, and bundle size across Ubuntu, Windows, and macOS.
+  </Card>
+  <Card title="blog_webhook_exec.yaml" icon="webhook">
+    Fires when a GitHub Discussion in the **Newsletter** category is created. Posts a Discord notification with the blog post title and link.
+  </Card>
+  <Card title="update_deps.yaml" icon="arrows-rotate">
+    Runs on the first of every month. Opens a pull request that bumps all dependencies to their latest versions.
+  </Card>
+</CardGroup>
+
+## `check_website.yaml` — Website Check
+
+This is the primary CI gate. It runs on every push to `main` and every pull request targeting `main`.
+
+```yaml
+name: Website Check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  website_check:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up SvelteKit on Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Copy .env from .env.example
+        run: cp .env.example .env
+
+      - name: Svelte check
+        run: npm run check
+
+      - name: Format
+        run: npm run format && git diff --exit-code
+
+      - name: Lint
+        run: npm run lint && git diff --exit-code
+
+      - name: Vitest tests
+        run: npm t
+
+      - name: Size Check
+        run: npm run test:size
+
+      - name: Transform Genuary Check Changes
+        id: transform-genuary-check-changes
+        shell: bash
+        run: |
+          if git diff --exit-code --quiet scripts/transform-genuary; then
+            echo "updated=0" >> $GITHUB_OUTPUT;
+          else
+            echo "updated=1" >> $GITHUB_OUTPUT;
+          fi
+
+      - name: Test Transform Genuary
+        if: steps.transform-genuary-check-changes.outputs.updated == 1
+        run: node scripts/transform-genuary/test.js
+```
+
+### Steps explained
+
+| Step | Command | Purpose |
+|---|---|---|
+| Svelte check | `npm run check` | Type-checks Svelte components and TS files |
+| Format | `npm run format` | Enforces Prettier formatting; fails if diff exists |
+| Lint | `npm run lint` | Runs ESLint with auto-fix; fails if diff exists |
+| Vitest tests | `npm t` | Runs the full unit test suite |
+| Size Check | `npm run test:size` | Asserts `_worker.js` ≤ 50 KB via `size-limit` |
+| Transform Genuary | conditional | Tests the Genuary transform script only when it changed |
+
+<Note>
+  The matrix strategy runs all steps on **Ubuntu, Windows, and macOS** in parallel. All three must pass before a PR can merge.
+</Note>
+
+## `blog_webhook_exec.yaml` — Blog Webhook
+
+Triggered when a GitHub Discussion is created in the **Newsletter** category (or manually via `workflow_dispatch`). Sends a Discord webhook notification:
+
+```yaml
+name: Blog Webhook Exec
+
+on:
+  workflow_dispatch:
+  discussion:
+    types:
+      - created
+
+jobs:
+  blog-webhook-exec:
+    if: ${{ github.event.discussion.category.name == 'Newsletter' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl \
+            -H "Content-Type: application/json" \
+            -d '{"content": "# New blog post created!\n**Title:** ${{ github.event.discussion.title }}\n**Link:** https://acmcsuf.com/blog/${{ github.event.discussion.number }}"}' \
+            ${{ secrets.DISCORD_BLOG_WEBHOOK_URL }}
+```
+
+The `DISCORD_BLOG_WEBHOOK_URL` secret must be configured in the repository settings for notifications to be delivered.
+
+## `update_deps.yaml` — Dependency updates
+
+Runs on a monthly schedule (`0 0 1 * *` — midnight UTC on the 1st of each month). Uses `npm-check-updates` to bump all dependencies, then opens a pull request:
+
+```yaml
+name: Update Dependencies
+on:
+  schedule:
+    - cron: '0 0 1 * *'
+
+jobs:
+  update-dep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+      - name: Update dependencies
+        run: |
+          npx -p npm-check-updates ncu -u
+          npm install
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: Update dependencies
+          title: Update dependencies
+          branch: update-dependencies
+          author: github-actions <noreply@github.com>
+```
+
+The resulting PR goes through the normal `Website Check` CI gate before it can be merged.
+
+## How CI gates production deploys
+
+Cloudflare's GitHub integration waits for all required status checks to pass before promoting a preview to production. This means:
+
+1. A push to `main` triggers both the `Website Check` workflow and a Cloudflare preview build simultaneously.
+2. If any CI step fails (type errors, lint violations, failing tests, or bundle size exceeding 50 KB), the PR is blocked.
+3. Only after all matrix jobs complete successfully does Cloudflare promote the preview build to `acmcsuf.com`.

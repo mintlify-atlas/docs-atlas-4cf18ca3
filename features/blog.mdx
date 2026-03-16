@@ -1,0 +1,114 @@
+---
+title: "Blog"
+description: "The README blog publishes posts sourced from GitHub Discussions and exposes JSON and text data endpoints for filtering and display."
+---
+
+The blog, branded **README by ACM at CSUF**, lives at `acmcsuf.com/blog`. Posts are pulled from the **Newsletter** category of the repository's GitHub Discussions and served through SvelteKit server-side data loaders.
+
+<Tip>
+  Blog posts are GitHub Discussions. To create a new post, open a discussion in the Newsletter category directly at `acmcsuf.com/blog/new` (a shortlink that resolves to the GitHub Discussions "new" form pre-set to the Newsletter category).
+</Tip>
+
+## How posts are loaded
+
+The page loader in `src/routes/(site)/blog/+page.ts` fetches from the `/blog/[query].json` data endpoint:
+
+```ts src/routes/(site)/blog/+page.ts
+export async function load({ fetch, url }: PageLoadEvent) {
+  const query = parseQuery(url.searchParams.get('l') || '');
+  const target = makeBlogPostsPageDataURL(query.labels ?? []);
+
+  const response = await fetch(target);
+  const blogOutput = await response.json();
+
+  return {
+    posts: blogOutput.posts as BlogPost[],
+    labels: blogOutput.labels as string[],
+    selectedLabels: query.labels,
+  };
+}
+```
+
+## Data endpoints
+
+| Endpoint | Description |
+|---|---|
+| `/blog/all.json` | All posts with all labels |
+| `/blog/[query].json` | Posts filtered by comma-separated label slugs |
+| `/blog/[id].txt` | Plain-text body of a single post by its discussion ID |
+
+The URL helper functions live in `src/lib/public/blog/urls.ts`:
+
+```ts
+// Returns /blog/all.json or /blog/label1,label2.json
+function makeBlogPostsPageDataURL(labels: string[]): string
+
+// Returns /blog or /blog?l=label1,label2
+function makeBlogPostsPageURL(labels: string[]): string
+
+// Returns /blog/[id]
+function makeBlogPostPageURL(id: number): string
+```
+
+## TypeScript types
+
+Defined in `src/lib/public/blog/types.ts`:
+
+```ts
+export interface BlogPost {
+  id: number;
+  url: string;           // acmcsuf.com blog post URL
+  discussionURL: string; // GitHub Discussions URL
+  title: string;
+  html: string;          // rendered HTML body
+  bodyText: string;      // plain-text body
+  createdAt: string;
+  lastEdited: string | null;
+  labels: string[];      // GitHub Discussion labels
+  author: {
+    displayname: string;
+    fullname?: string;
+    url: string;
+    picture: string;
+  };
+}
+
+export interface BlogOutput {
+  labels: string[];
+  posts: BlogPost[];
+}
+
+export interface BlogFetchOptions {
+  id?: number;
+  labels: string[];
+}
+```
+
+## Adding a blog post
+
+<Steps>
+  <Step title="Open a new GitHub Discussion">
+    Navigate to `acmcsuf.com/blog/new`. This shortlink redirects to the GitHub Discussions new-discussion form with the **Newsletter** category pre-selected.
+  </Step>
+  <Step title="Write your post">
+    Fill in the title and body using Markdown. Assign one or more labels to make the post discoverable by tag filtering on the blog page.
+  </Step>
+  <Step title="Submit and verify">
+    Submit the discussion. The post appears on `acmcsuf.com/blog` once the server-side cache refreshes (handled by `src/lib/server/blog/`).
+  </Step>
+</Steps>
+
+## Server-side data
+
+The server module at `src/lib/server/blog/` contains:
+
+| File | Purpose |
+|---|---|
+| `gql.ts` | GraphQL queries for fetching discussions from the GitHub API |
+| `posts.ts` | Logic to transform raw GitHub Discussions into `BlogPost` objects |
+| `data.json` | Static fallback/sample blog post data |
+| `data.ts` | Re-exports `SAMPLE_BLOG_POSTS` from `data.json` |
+
+## RSS feed
+
+The blog page links to an RSS feed at `/feed.xml` via a standard `<link rel="alternate">` in the page header, displayed as a feed icon next to the subtitle.

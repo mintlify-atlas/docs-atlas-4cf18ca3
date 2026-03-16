@@ -1,0 +1,68 @@
+---
+title: "Submitting a pull request"
+description: "Requirements and etiquette for opening, reviewing, and merging pull requests on acmcsuf.com."
+---
+
+## Opening a pull request
+
+When you are ready to submit your changes, go to the
+[main repository](https://acmcsuf.com/code) and click **Pull Requests → New
+pull request**.
+
+## PR checklist
+
+Every pull request must include:
+
+- **A clear and descriptive title.** Do not use titles like "Fixed #123" — the
+  title should summarise _what_ changed.
+- **A detailed description** of what you changed and why.
+- **A link to the related issue** (if your change resolves one).
+- **Screenshots** if your change affects anything visible on the website, or if
+  screenshots would help the reviewer understand your changes.
+
+## Run `npm run all` first
+
+Before pushing your final commit, run the full quality gate:
+
+```bash
+npm run all
+```
+
+This executes lint, format, type-check, build, and tests in sequence. The
+automated CI build will fail if this command does not pass locally.
+
+## Merge strategy
+
+Once your PR is approved, merge it using **Squash and merge** — not a regular
+merge commit. This keeps the commit history on `main` clean and readable.
+
+<Warning>
+  Do **not** use "Create a merge commit" or "Rebase and merge". The project
+  requires a **squash merge** for all contributions.
+</Warning>
+
+## Reviewer etiquette
+
+- Use the **Reviewers** panel on the PR page to formally request a review.
+- As a **requester**, give your reviewer a heads-up outside of GitHub (e.g.,
+  Discord) so they know a review is waiting.
+- As a **reviewer**, respond to review requests within **24 hours**.
+- If your reviewer has not responded within 24 hours, send a gentle reminder.
+  If needed, you may request a review from a different person.
+
+## Examples of good PRs
+
+These PRs demonstrate the expected level of detail in title, description, and
+context:
+
+- [acmcsuf.com/pull/477](https://github.com/acmcsufoss/acmcsuf.com/pull/477)
+- [acmcsuf.com/pull/469](https://github.com/acmcsufoss/acmcsuf.com/pull/469)
+- [acmcsuf.com/pull/401](https://github.com/acmcsufoss/acmcsuf.com/pull/401)
+
+## Examples of PRs to avoid
+
+These PRs illustrate common mistakes such as vague titles or missing
+descriptions:
+
+- [acmcsuf.com/pull/359](https://github.com/acmcsufoss/acmcsuf.com/pull/359)
+- [acmcsuf.com/pull/357](https://github.com/acmcsufoss/acmcsuf.com/pull/357)

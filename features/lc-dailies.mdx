@@ -1,0 +1,89 @@
+---
+title: "LC Dailies"
+description: "The LC Dailies leaderboard tracks weekly LeetCode competition scores for members of the ACM at CSUF Discord server, organised into seasons."
+---
+
+LC Dailies is a recurring LeetCode competition for members of the ACM at CSUF Discord server. Players solve daily LeetCode problems and are ranked by the number of problems solved and time taken. Scores reset on a weekly basis. The leaderboard is displayed at `acmcsuf.com/lc-dailies`.
+
+## Concept
+
+- **Season** — a time-bounded competition period. Each season has a numeric ID and a start date.
+- **Submission** — a player's solution to the daily problem, recorded with a timestamp.
+- **Score** — derived from submissions within the current week; resets weekly.
+- Players find usage instructions at `acmcsuf.com/lc-dailies-handbook`.
+
+## Routes
+
+| Route | Description |
+|---|---|
+| `/lc-dailies` | Index page listing all seasons |
+| `/lc-dailies/[season_id]` | Leaderboard and statistics for a specific season |
+
+## Index page
+
+Source: `src/routes/(site)/lc-dailies/+page.svelte` and `+page.ts`
+
+The page loader uses `LCDailiesAPIClient` to fetch the list of all seasons:
+
+```ts src/routes/(site)/lc-dailies/+page.ts
+export async function load({ fetch }: PageLoadEvent) {
+  const apiClient = new LCDailiesAPIClient(fetch);
+  const seasons = await apiClient.listSeasons();
+  return { seasons };
+}
+```
+
+Each season is rendered as a list item linking to `/lc-dailies/[season.id]`, with its start date shown in an `<time>` element.
+
+## Season detail page
+
+Source: `src/routes/(site)/lc-dailies/[season_id]/+page.svelte`
+
+Displays a summary table for the season:
+
+| Field | Description |
+|---|---|
+| Season ID | Linked to `https://lc-dailies.deno.dev/seasons/[id]` |
+| Start date | ISO date string |
+| Total players | Count of unique player IDs with submissions |
+| Total submissions | Sum of all submission counts across all players |
+| Last synced | Timestamp of last data sync, or `"Never"` |
+
+It also renders a preformatted `<pre><code>` block from the season's plain-text representation (`data.seasonText`).
+
+## API client
+
+Source: `src/lib/public/lc-dailies/lc-dailies-api-client.ts`
+
+The `LCDailiesAPIClient` class wraps the remote `lc-dailies` API hosted at `https://lc-dailies.deno.dev`:
+
+```ts
+class LCDailiesAPIClient {
+  // List all seasons
+  listSeasons(): Promise<Season[]>
+
+  // Get a specific season by ID
+  getSeason(seasonID: string): Promise<Season | null>
+
+  // Get the most recent season
+  getLatestSeason(): Promise<Season | null>
+
+  // Get the plain-text leaderboard for a season
+  getSeasonText(seasonID: string): Promise<string | null>
+}
+```
+
+The `Season` type is imported from the `lc-dailies` npm package.
+
+## API endpoints (lc-dailies.deno.dev)
+
+| Endpoint | Description |
+|---|---|
+| `GET /seasons` | List all seasons |
+| `GET /seasons/[id]` | Get a season by ID |
+| `GET /seasons/latest` | Get the latest season |
+| `GET /seasons/[id].txt` | Plain-text leaderboard for a season |
+
+<Info>
+  The `lc-dailies` backend is a separate Deno service maintained under the `acmcsufoss` GitHub organisation. The acmcsuf.com website consumes it as a read-only API client.
+</Info>

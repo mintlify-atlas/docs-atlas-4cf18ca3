@@ -1,0 +1,55 @@
+---
+title: "Boardify"
+description: "Boardify is a web-based headshot cropper at acmcsuf.com/boardify that helps board members generate their ACM profile photo."
+---
+
+Boardify lives at `acmcsuf.com/boardify`. It allows board members to upload a headshot, crop it to a square, and download or copy a link to the resulting ACM at CSUF board-style profile image.
+
+<Note>
+  Copying the image link to share requires access to the ACM at CSUF Discord server. The `/boardify` page is publicly accessible, but the resulting image link is intended to be shared in the Discord server for a board member's profile to be updated.
+</Note>
+
+## How it works
+
+<Steps>
+  <Step title="Upload your headshot">
+    On the Boardify page, click the upload area and select a photo from your device.
+  </Step>
+  <Step title="Crop to your liking">
+    A crop box appears over the image. Drag and resize it until you're happy with the framing.
+  </Step>
+  <Step title="Copy the image link">
+    Click the copy button to copy the processed image link to your clipboard.
+  </Step>
+  <Step title="Share in Discord">
+    Paste the image link in the ACM at CSUF Discord server so it can be used to update your board member profile on the website.
+  </Step>
+</Steps>
+
+## Page source
+
+Source: `src/routes/(site)/boardify/+page.svelte`
+
+The page uses the `<Cropper>` component from `src/lib/components/cropper/cropper.svelte` to handle the image upload and crop interaction. The page layout is built with the `<Block>` layout component.
+
+```svelte
+<Block align={TextAlignment.LEFT}>
+  <div slot="text" class="cropper-block">
+    <Cropper />
+  </div>
+</Block>
+```
+
+## Relation to the Teams page
+
+Once a board member has a processed image link, the link URL (pointing to the hosted image) can be used as the `picture` value in `src/lib/public/board/data/officers.json`. This keeps the profile photo in sync between the Discord server and the website.
+
+See the [Teams](/features/teams) page for instructions on updating `officers.json` directly.
+
+## Discord command alternative
+
+The `/boardd` slash command in the ACM at CSUF Discord server provides a Discord-native way for board members to update their profile fields without editing JSON directly. The command is part of the ACM bot infrastructure and prompts the member to enter their updated information.
+
+<Tip>
+  Use the `/boardd` Discord command if you are a board member who prefers not to open a pull request. Changes submitted via the command are reviewed and applied to `officers.json` by an officer with repository access.
+</Tip>

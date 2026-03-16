@@ -1,0 +1,189 @@
+---
+title: "Static assets"
+description: "Global CSS variables, utility classes, images, board member headshots, and other files served from /static/."
+---
+
+Everything in the `static/` directory is served directly by the Cloudflare Worker as-is — no bundling or transformation. This includes the global stylesheet, all images, favicons, and other public files.
+
+## Directory structure
+
+```text
+static/
+├── global.css              # Global styles, CSS variables, utility classes
+├── assets/                 # General images and media
+├── people/                 # Board member headshots
+├── design_gallery/         # Design gallery images
+├── portfolio-thumbnails/   # Portfolio preview images
+├── sponsors/               # Sponsor logos
+├── colors.json             # ACM brand color definitions
+├── robots.txt              # Search engine crawl rules
+├── manifest.json           # Web app manifest
+├── favicon.ico             # Browser tab icon
+├── favicon.png
+├── favicon-16x16.png
+├── favicon-32x32.png
+├── apple-touch-icon.png
+├── android-chrome-192x192.png
+├── android-chrome-512x512.png
+├── mstile-150x150.png
+└── safari-pinned-tab.svg
+```
+
+## `global.css`
+
+`static/global.css` is loaded on every page. It defines all CSS custom properties (variables) and utility classes used across the site.
+
+<Warning>
+Do not remove variables or utility classes from `global.css` without auditing their usage across all components. Deletions can cause site-wide visual regressions.
+</Warning>
+
+### CSS variables
+
+#### Brand colors
+
+All ACM brand colors are available as CSS custom properties:
+
+```css
+--acm-sky: rgba(56, 182, 255, 1);
+--acm-blue: rgba(44, 145, 198, 1);
+--acm-bluer: rgba(30, 108, 255, 1);
+--acm-turquoise: rgba(17, 212, 177, 1);
+--acm-emerald: rgba(33, 209, 159, 1);
+--acm-lemon: rgba(255, 208, 41, 1);
+--acm-orange: rgba(255, 121, 23, 1);
+--acm-red: rgba(212, 17, 83, 1);
+--acm-pink: rgba(255, 67, 101, 1);
+--acm-blush: rgba(254, 14, 201, 1);
+--acm-purple: rgba(157, 53, 231, 1);
+```
+
+#### Team colors
+
+Each ACM team has a dedicated color variable:
+
+```css
+--acm-general-rgb: var(--acm-blue-rgb);
+--acm-ai-rgb: var(--acm-emerald-rgb);
+--acm-algo-rgb: var(--acm-purple-rgb);
+--acm-design-rgb: var(--acm-pink-rgb);
+--acm-dev-rgb: var(--acm-bluer-rgb);
+--acm-gamedev-rgb: var(--acm-red-rgb);
+--acm-icpc-rgb: var(--acm-orange-rgb);
+--acm-marketing-rgb: var(--acm-blush-rgb);
+--acm-oss-rgb: var(--acm-turquoise-rgb);
+--acm-special-events-rgb: var(--acm-lemon-rgb);
+```
+
+#### Fluid font sizes
+
+Font sizes are fluid — they scale smoothly with viewport width using `clamp()`:
+
+```css
+--size-xxl: clamp(2.8125rem, 1.8403rem + 5.5556vw, 5.3125rem);
+--size-xl:  clamp(2rem,      1.7545rem + 1.0909vw, 3.5rem);
+--size-lg:  clamp(1.5rem,    1.3773rem + 0.5455vw, 2.25rem);
+--size-md:  clamp(1.125rem,  1.0636rem + 0.2727vw, 1.5rem);
+--size-sm:  clamp(1rem,      0.9795rem + 0.0909vw, 1.125rem);
+--size-xs:  clamp(0.75rem,   0.7295rem + 0.0909vw, 0.875rem);
+```
+
+#### Theme-sensitive variables
+
+These change between light and dark mode via the `data-theme` attribute:
+
+```css
+--acm-light       /* page background */
+--acm-dark        /* default text color */
+--acm-canvas      /* card/surface background */
+--navbar-bg       /* navigation bar background */
+--footer-bg       /* footer background (var(--acm-ocean)) */
+--button-bg       /* button background */
+--button-bg-hover /* button hover state */
+--button-color    /* button text color */
+```
+
+### Utility classes
+
+#### Color classes
+
+Apply brand colors to text:
+
+```html
+<span class="acm-blue">Blue text</span>
+<span class="acm-turquoise">Turquoise text</span>
+<span class="acm-pink">Pink text</span>
+<span class="acm-purple">Purple text</span>
+```
+
+#### Font weight classes
+
+```html
+<p class="acm-heavy">font-weight: 500</p>
+<p class="acm-heavier">font-weight: 600</p>
+<p class="acm-heaviest">font-weight: 700</p>
+<p class="acm-italic">font-style: italic</p>
+```
+
+#### Font size classes
+
+```html
+<h1 class="size-xxl">Display heading</h1>
+<h2 class="size-xl">Section heading</h2>
+<p class="size-sm">Body text</p>
+```
+
+## Responsive breakpoints
+
+The site uses a mobile-first approach. All base styles target mobile, with breakpoints for larger screens:
+
+| Breakpoint | Width | Target |
+|---|---|---|
+| Mobile (base) | `< 768px` | Phones |
+| Tablet | `768px` | Tablets and small laptops |
+| Desktop | `1440px` | Full-width desktop layouts |
+
+Use these in component `<style>` blocks:
+
+```css
+/* Mobile first — base styles apply to all sizes */
+.container {
+  padding: 1rem;
+}
+
+/* Tablet and up */
+@media (min-width: 768px) {
+  .container {
+    padding: 2rem;
+  }
+}
+
+/* Desktop and up */
+@media (min-width: 1440px) {
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
+```
+
+## `static/assets/`
+
+General images used across pages live in `static/assets/`. Reference them with an absolute path in components:
+
+```html
+<img src="/assets/acm-logo.png" alt="ACM at CSUF logo" />
+```
+
+## `static/people/`
+
+Normalized headshots for current ACM board members are stored in `static/people/`. Each board member listed in the board data has a corresponding image here.
+
+<Note>
+All images in `static/people/` are there with each person's explicit consent. Follow the consent process before adding new headshots.
+</Note>
+
+Headshots are referenced by the `board-picture.svelte` component using the member's identifier:
+
+```html
+<img src="/people/{member.handle}.jpg" alt="{member.name}" />
+```

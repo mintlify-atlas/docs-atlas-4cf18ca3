@@ -1,0 +1,106 @@
+---
+title: "Workshops"
+description: "The workshops page archives presentation links for every team across all tracked semesters, with per-team and per-semester deep-link routes."
+---
+
+The workshops page at `acmcsuf.com/workshops` displays an archive of all workshop presentations hosted by ACM at CSUF teams. Each team has its own expandable table of workshops, selectable by semester.
+
+## Supported teams and semesters
+
+Workshop data is typed in `src/lib/components/workshop/table.ts`:
+
+```ts
+export type teams =
+  | 'ai' | 'algo' | 'design' | 'dev'
+  | 'gamedev' | 'general' | 'icpc'
+  | 'nodebuds' | 'oss';
+
+export type semesters = 'fa24' | 'sp25' | 'fa25' | 'sp26';
+```
+
+Semester shortcut aliases are also supported (e.g. `f25` → `fa25`, `s26` → `sp26`).
+
+## Workshop data structure
+
+Each workshop entry uses the `WorkshopInfo` interface:
+
+```ts
+export interface WorkshopInfo {
+  name: string;     // display name of the workshop
+  team: string;     // team slug (e.g. "ai", "dev")
+  semester: string; // semester code (e.g. "fa24")
+  link: string;     // URL to the presentation (Google Slides, Figma, etc.)
+}
+```
+
+Workshops are grouped in a nested `Tables` structure keyed first by team, then by semester:
+
+```ts
+type Tables = {
+  [team in teams]: {
+    workshops: {
+      [sem in semesters]: WorkshopInfo[];
+    };
+  };
+};
+```
+
+## Routes
+
+| Route | Description |
+|---|---|
+| `/workshops` | Overview page with all teams and a semester picker for each |
+| `/workshops/[team]/[semester]` | Direct link to a specific team's workshops for one semester |
+
+The `[team]` and `[semester]` path parameters are typed as `teams` and `semesters` respectively.
+
+## Workshops overview page
+
+Source: `src/routes/(site)/workshops/+page.svelte`
+
+The overview page renders a `<WSTable>` component for each team, passing the `team` slug and a human-readable `display` name:
+
+```svelte
+<WSTable team="general" display="General" />
+<WSTable team="ai"      display="AI" />
+<WSTable team="algo"    display="Algo" />
+<WSTable team="design"  display="Design" />
+<WSTable team="dev"     display="Dev" />
+<WSTable team="gamedev" display="Game Dev" />
+<WSTable team="icpc"    display="ICPC" />
+<WSTable team="nodebuds" display="Node Buds" />
+<WSTable team="oss"     display="Open Source" />
+```
+
+## Per-team semester page
+
+Source: `src/routes/(site)/workshops/[team]/[semester]/+page.svelte`
+
+Loads the `[team]` and `[semester]` path parameters from `$page.params` and passes them to the `<WSDisplay>` component, which renders the list of workshop links for that combination.
+
+## Adding a new workshop
+
+<Steps>
+  <Step title="Open the workshop table">
+    Edit `src/lib/components/workshop/table.ts`. Locate the entry for the correct team.
+  </Step>
+  <Step title="Add a WorkshopInfo entry">
+    Append a new object to the array under the correct semester key:
+
+    ```ts
+    {
+      name: 'Intro to Rust',
+      team: 'oss',
+      semester: 'sp26',
+      link: 'https://docs.google.com/presentation/d/...'
+    }
+    ```
+  </Step>
+  <Step title="Submit a pull request">
+    Open a PR against `main`. The entry will appear on the workshops page once merged and deployed.
+  </Step>
+</Steps>
+
+<Note>
+  Presentation links can point to Google Slides, Figma boards, Canva designs, Google Docs, external forms, or any other URL.
+</Note>

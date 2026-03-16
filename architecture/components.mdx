@@ -1,0 +1,111 @@
+---
+title: "Components"
+description: "Reusable Svelte components in src/lib/components/ and how they are used across routes."
+---
+
+Reusable UI pieces live in `src/lib/components/`. Each subdirectory groups related components by feature area. Routes in `src/routes/` import and compose these components rather than duplicating markup.
+
+## Importing components
+
+SvelteKit maps `$lib` to `src/lib/`, so you import components like this:
+
+```svelte +page.svelte
+<script>
+  import Footer from '$lib/components/footer/footer.svelte';
+  import NavBar from '$lib/components/nav/bar.svelte';
+  import Block from '$lib/components/block/block.svelte';
+</script>
+
+<NavBar />
+<Block>
+  <p>Page content goes here.</p>
+</Block>
+<Footer />
+```
+
+## Component directories
+
+<AccordionGroup>
+  <Accordion title="block/">
+    `block.svelte` — A generic content wrapper that provides consistent horizontal padding and maximum-width constraints. Used to contain page sections.
+  </Accordion>
+
+  <Accordion title="blog/">
+    - `blog-post-preview.svelte` — Renders a summary card for a single blog post, including title, author, date, and label badges.
+    - `labels.svelte` — Renders a list of label chips from GitHub Discussion labels.
+  </Accordion>
+
+  <Accordion title="board-member/">
+    - `board-member.svelte` — Full profile card for a single board member, including headshot, name, role, and team.
+    - `board-picture.svelte` — Renders the headshot image from `/static/people/` with a fallback.
+    - `team-picker.svelte` — Dropdown or tab UI to filter board members by team.
+  </Accordion>
+
+  <Accordion title="button/">
+    `button.svelte` — A styled `<button>` or `<a>` element that applies the site's button design tokens from `global.css` (`--button-bg`, `--button-color`).
+  </Accordion>
+
+  <Accordion title="bw-icon/">
+    Provides a black-and-white icon component for consistent monochrome icon rendering.
+  </Accordion>
+
+  <Accordion title="cropper/">
+    Image cropping UI used in tools like Boardify to let users adjust their headshot before submission.
+  </Accordion>
+
+  <Accordion title="faq/">
+    Accordion-based FAQ component used on the home page to render frequently asked questions.
+  </Accordion>
+
+  <Accordion title="footer/">
+    `footer.svelte` — The site-wide footer with social links and navigation. Rendered in the root layout.
+  </Accordion>
+
+  <Accordion title="nav/">
+    `bar.svelte` — The top navigation bar with links to major sections, mobile hamburger menu, and light/dark theme toggle. Rendered in the root layout.
+  </Accordion>
+
+  <Accordion title="recursive-ul/">
+    Renders arbitrarily nested `<ul>` lists recursively. Used for hierarchical data like the sitemap.
+  </Accordion>
+
+  <Accordion title="scroll-to-top/">
+    A floating button that appears when the user scrolls down and returns the page to the top on click.
+  </Accordion>
+
+  <Accordion title="select/">
+    `select.svelte` — A styled `<select>` dropdown with consistent appearance matching the site's design system.
+  </Accordion>
+
+  <Accordion title="toaster/">
+    - `toaster.svelte` — Renders a stack of toast notifications in the corner of the screen.
+    - `toasts.ts` — Store and helper functions to create, display, and dismiss toasts.
+  </Accordion>
+
+  <Accordion title="toggle/">
+    A toggle switch component used for boolean settings like light/dark theme.
+  </Accordion>
+
+  <Accordion title="workshop/">
+    - `wsdisplay.svelte` — Renders a full workshop detail view.
+    - `wstable.svelte` — Renders a table listing workshops for a team or semester.
+    - `wscommon.ts` — Shared types and utility functions for workshop components.
+    - `table.ts` — Table data helpers.
+  </Accordion>
+</AccordionGroup>
+
+## SVG icons
+
+The `src/lib/components/svg/` directory contains Svelte components that wrap SVG markup. This makes icons reusable across the site without inlining raw SVG in every template.
+
+```svelte example usage
+<script>
+  import DiscordIcon from '$lib/components/svg/discord.svelte';
+</script>
+
+<DiscordIcon width={24} height={24} />
+```
+
+<Tip>
+When adding a new icon, create a new `.svelte` file in `src/lib/components/svg/` and accept `width`, `height`, and `class` props so the icon can be sized and styled from the parent.
+</Tip>

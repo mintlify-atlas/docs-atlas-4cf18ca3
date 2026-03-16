@@ -1,0 +1,80 @@
+---
+title: "ACM at CSUF"
+description: "Official documentation for the ACM at CSUF website — a SvelteKit-powered open source project run by students at Cal State Fullerton."
+---
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
+    Get the site running locally in minutes
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="/architecture/overview">
+    Understand the project structure and design
+  </Card>
+  <Card title="Contributing" icon="code-pull-request" href="/contributing/overview">
+    Learn how to contribute features and fixes
+  </Card>
+  <Card title="Deployment" icon="cloud" href="/deployment/cloudflare-workers">
+    Deploy the site to Cloudflare Workers
+  </Card>
+</CardGroup>
+
+## What is acmcsuf.com?
+
+[acmcsuf.com](https://acmcsuf.com) is the official website for the ACM chapter at California State University, Fullerton (CSUF). It is a fully open-source project built with [SvelteKit](https://kit.svelte.dev/) and deployed on [Cloudflare Workers](https://workers.cloudflare.com/).
+
+The site serves as the digital home for CSUF's ACM community — connecting students with events, workshops, hackathons, blog posts, and team information.
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="Events" icon="calendar" href="/features/events">
+    Google Calendar-powered events listing with RSS feed support
+  </Card>
+  <Card title="Blog" icon="newspaper" href="/features/blog">
+    Newsletter and blog posts driven by GitHub Discussions
+  </Card>
+  <Card title="Teams" icon="users" href="/features/teams">
+    Board member directory with dynamic officer profiles
+  </Card>
+  <Card title="Workshops" icon="chalkboard" href="/features/workshops">
+    Team-specific workshop listings and resources
+  </Card>
+  <Card title="Hackathons" icon="code" href="/features/hackathons">
+    Upcoming and past hackathon information
+  </Card>
+  <Card title="LC Dailies" icon="trophy" href="/features/lc-dailies">
+    LeetCode Dailies leaderboard with season tracking
+  </Card>
+  <Card title="Boardify" icon="discord" href="/features/boardify">
+    Discord slash command to update board member data
+  </Card>
+  <Card title="Shorter" icon="link" href="/features/shorter">
+    URL shortlink manager integrated with Discord
+  </Card>
+</CardGroup>
+
+## Tech stack
+
+| Technology | Purpose |
+|---|---|
+| [SvelteKit](https://kit.svelte.dev/) | Full-stack web framework |
+| [Svelte 5](https://svelte.dev/) | UI component library |
+| [TypeScript](https://www.typescriptlang.org/) | Type-safe JavaScript |
+| [Cloudflare Workers](https://workers.cloudflare.com/) | Edge deployment platform |
+| [Vite](https://vitejs.dev/) | Build tooling |
+| [Vitest](https://vitest.dev/) | Unit testing |
+| [Google Calendar API](https://developers.google.com/calendar) | Events data source |
+| [GitHub Discussions](https://docs.github.com/en/discussions) | Blog/newsletter data source |
+
+## Get involved
+
+acmcsuf.com is built and maintained by CSUF students. Whether you're a first-time contributor or an experienced developer, there are always ways to get involved.
+
+<CardGroup cols={2}>
+  <Card title="Good first issues" icon="star" href="https://github.com/acmcsufoss/acmcsuf.com/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22">
+    Browse beginner-friendly issues on GitHub
+  </Card>
+  <Card title="Visit the website" icon="globe" href="https://acmcsuf.com">
+    See the live site at acmcsuf.com
+  </Card>
+</CardGroup>

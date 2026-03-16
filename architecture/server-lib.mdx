@@ -1,0 +1,163 @@
+---
+title: "Server library"
+description: "Server-only modules in src/lib/server/ and what each one does."
+---
+
+The `src/lib/server/` directory contains code that runs only on the server. This includes API clients, data fetchers, environment variable access, and caching utilities. You cannot import these modules in client-side Svelte components or in `src/lib/public/`.
+
+<Note>
+SvelteKit enforces the server-only boundary. If you try to import `$env/static/private` or a `src/lib/server/` module from a client-rendered context, the build will fail.
+</Note>
+
+## Directory structure
+
+```text
+src/lib/server/
+├── blog/           # GitHub Discussions blog data fetching
+├── cache/          # Generic in-memory cache utility
+├── certificates/   # GitHub repository certificate generation
+├── env/            # Environment variable re-exports
+├── events/         # Google Calendar event fetching
+├── flags/          # Feature flag helpers
+├── gallery/        # Google Drive gallery fetching
+├── gql/            # GitHub GraphQL client
+├── links/          # URL shortener logic
+└── parse-bool/     # String-to-boolean utility
+```
+
+## Modules
+
+### `blog/`
+
+Fetches blog posts from GitHub Discussions.
+
+| File | Purpose |
+|---|---|
+| `gql.ts` | Builds the GraphQL query string for fetching discussions by category |
+| `posts.ts` | Calls the GitHub GraphQL API and maps results to `BlogPost` objects |
+| `data.ts` | Exports `SAMPLE_BLOG_POSTS` from `data.json` for use as a fallback |
+| `data.json` | Static sample blog post data |
+
+### `cache/`
+
+`cache.ts` exports a generic `Cache<T>` class with a 1-minute expiration timeout. Use it to avoid repeating expensive API calls within a short window.
+
+```typescript
+import { Cache } from '$lib/server/cache/cache';
+
+const eventsCache = Cache.create<ClubEvent[]>();
+
+// Store data
+eventsCache.set(events);
+
+// Read data (returns undefined if expired)
+const cached = eventsCache.get();
+```
+
+A `NoopCache<T>` is also provided for contexts where caching should be disabled (e.g., when `DEBUG_FLAG_ENABLED` is set).
+
+### `certificates/`
+
+Generates release certificates for GitHub repository contributors. Uses the GitHub GraphQL API to look up release data.
+
+| File | Purpose |
+|---|---|
+| `gql.ts` | GraphQL query for release + contributor data |
+| `certificates.ts` | Certificate generation logic |
+| `cache.ts` | Caches certificate data |
+| `index.ts` | Public entry point |
+
+### `env/`
+
+Centralized environment variable access. All server code should import environment variables from here rather than directly from `$env/static/private`.
+
+| File | Purpose |
+|---|---|
+| `required.ts` | Re-exports `GH_ACCESS_TOKEN`, `GH_DISCUSSION_CATEGORY_ID`, `GCAL_API_KEY`, `GCAL_ID`, `GDRIVE_GALLERY_API_KEY`, `GDRIVE_GALLERY_FOLDER_ID` |
+| `optional.ts` | Re-exports `DEBUG_FLAG_ENABLED` |
+| `index.ts` | Combines both and logs a warning for any undefined required variable at startup |
+
+See [Environment variables](/architecture/environment-variables) for the full variable reference.
+
+### `events/`
+
+Fetches and transforms Google Calendar events into `ClubEvent` objects.
+
+| File | Purpose |
+|---|---|
+| `gcal.ts` | Calls the Google Calendar API via `@googleapis/calendar` |
+| `event.ts` | `makeClubEvent()` — maps a raw `GCalEvent` to a `ClubEvent` |
+| `cache.ts` | Caches the fetched event list |
+| `data/` | Static fallback event data for local development |
+| `event.test.ts` | Unit tests for `makeClubEvent()` |
+| `gcal.test.ts` | Unit tests for the calendar fetching logic |
+
+### `flags/`
+
+`index.ts` exports boolean feature flags derived from environment variables:
+
+```typescript
+import { DEBUG_FLAG_ENABLED } from '$lib/server/flags';
+
+if (DEBUG_FLAG_ENABLED) {
+  console.log('Debug mode is on');
+}
+```
+
+The `parseBool()` utility from `parse-bool/` converts the raw string value to a boolean.
+
+### `gallery/`
+
+Fetches images from a Google Drive folder for the design gallery feature.
+
+| File | Purpose |
+|---|---|
+| `drive.ts` | Calls the Google Drive API to list files in the gallery folder |
+| `gallery.ts` | Transforms Drive file metadata into gallery item objects |
+| `index.ts` | Public entry point |
+
+### `gql/`
+
+`github.ts` provides a single `doQuery<T>()` function that sends an authenticated POST request to the GitHub GraphQL API:
+
+```typescript
+import { doQuery } from '$lib/server/gql/github';
+
+const data = await doQuery<{ repository: ... }>(query);
+```
+
+Authentication uses the `GH_ACCESS_TOKEN` environment variable.
+
+### `links/`
+
+Implements the URL shortener that runs in `src/hooks.server.ts`.
+
+| File | Purpose |
+|---|---|
+| `shortener.ts` | SvelteKit `Handle` function; intercepts requests and redirects shortlinks |
+| `resolve.ts` | Matches a URL against the links map and returns the destination |
+| `qr.ts` | Generates SVG QR codes for shortlinks (used by the `[...id=link].svg` route) |
+| `types.ts` | Shared types for link data |
+| `resolve.test.ts` | Unit tests for link resolution |
+
+### `parse-bool/`
+
+A small utility that converts environment variable strings to booleans:
+
+```typescript
+import { parseBool } from '$lib/server/parse-bool/parse-bool';
+
+parseBool('1');     // true
+parseBool('true'); // true
+parseBool('0');    // false
+parseBool('');     // false
+```
+
+## Server-only vs shared code
+
+| Location | Can access secrets? | Can run on client? | Use for |
+|---|---|---|---|
+| `src/lib/server/` | Yes | No | API calls, env vars, data fetching |
+| `src/lib/public/` | No | Yes | Types, utilities, static data |
+| `src/routes/.../+page.ts` | Yes (server phase) | Yes (client phase) | SvelteKit load functions |
+| `src/hooks.server.ts` | Yes | No | Request interception |

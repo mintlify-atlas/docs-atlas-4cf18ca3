@@ -1,0 +1,90 @@
+---
+title: "Shorter"
+description: "Shorter is the URL shortlink system for acmcsuf.com, mapping memorable slugs to destination URLs stored in links.json."
+---
+
+Shorter manages the URL shortlinks available at `acmcsuf.com/[slug]`. The full list of shortlinks is displayed at `acmcsuf.com/shorter`. The source for the shortlink system is maintained as an open-source project at [github.com/acmcsufoss/shorter](https://github.com/acmcsufoss/shorter).
+
+## How shortlinks work
+
+Shortlinks are stored in `src/lib/public/links/links.json` as a flat JSON object mapping pathname slugs to destination URLs:
+
+```json
+{
+  "github":    "https://github.com/acmcsufoss",
+  "discord":   "https://discord.gg/jXpUE6bS4s",
+  "instagram": "https://instagram.com/acmcsuf",
+  "linkedin":  "https://linkedin.com/company/acm-at-csuf/",
+  "youtube":   "https://www.youtube.com/channel/UCDMBj0o4V8Cpt0jgsZLNVVg",
+  "blog/new":  "/code/discussions/new?category=Newsletter",
+  "code":      "https://github.com/acmcsufoss/acmcsuf.com"
+}
+```
+
+A shortlink like `acmcsuf.com/discord` resolves to the destination value for the key `"discord"`.
+
+## The /shorter page
+
+Source: `src/routes/(site)/shorter/+page.svelte`
+
+Imports `LINKS` from `$lib/public/links` and renders the full shortlink directory:
+
+```svelte
+{#each Object.entries(LINKS) as [pathname, destination]}
+  {pathname}: <a href={destination}>{destination}</a>
+{/each}
+```
+
+The page also links to:
+- The Shorter source code: `https://github.com/acmcsufoss/shorter`
+- The Shorter handbook: `acmcsuf.com/shorter-handbook`
+
+## Adding a shortlink
+
+<Steps>
+  <Step title="Edit links.json">
+    Open `src/lib/public/links/links.json` and add a new key-value pair:
+
+    ```json
+    {
+      "my-slug": "https://destination.example.com/path"
+    }
+    ```
+
+    The key becomes the URL path (`acmcsuf.com/my-slug`) and the value is the redirect target.
+  </Step>
+  <Step title="Test locally">
+    Run the dev server and navigate to `localhost:5173/my-slug` to confirm the redirect works.
+  </Step>
+  <Step title="Submit a pull request">
+    Open a PR against `main`. The shortlink goes live after merge and deployment.
+  </Step>
+</Steps>
+
+<Warning>
+  Shortlink slugs must not conflict with existing routes in the SvelteKit app. Check the `src/routes/(site)/` directory to ensure the slug is not already a named route.
+</Warning>
+
+## Discord command
+
+The `/shorter` slash command in the ACM at CSUF Discord server allows officers to request new shortlinks without opening a pull request directly. Submitted requests are reviewed and merged by an officer with repository access.
+
+## Shortlink categories
+
+The `links.json` file contains shortlinks in several categories:
+
+<Accordion title="Social media">
+  `github`, `youtube`, `instagram`, `linkedin`, `discord`, `tiktok`-style links pointing to official ACM at CSUF social profiles.
+</Accordion>
+
+<Accordion title="GitHub workflow helpers">
+  `issues`, `bug`, `enhance`, `pull`, `gfi`, `gfi/front`, `gfi/back`, `gfi/misc` — shortcuts to GitHub issue filters and PR lists.
+</Accordion>
+
+<Accordion title="Blog">
+  `blog/new` — opens the GitHub Discussions form pre-set to the Newsletter category.
+</Accordion>
+
+<Accordion title="Workshop and event resources">
+  Team-specific links to Google Slides, Figma files, Google Forms, and other external resources used in workshops and events.
+</Accordion>

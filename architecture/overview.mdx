@@ -1,0 +1,71 @@
+---
+title: "Architecture overview"
+description: "High-level overview of how acmcsuf.com is structured using SvelteKit and Cloudflare Workers."
+---
+
+acmcsuf.com is a full-stack web application built with [SvelteKit](https://kit.svelte.dev/) and deployed on [Cloudflare Workers](https://workers.cloudflare.com/). SvelteKit handles both the server-side rendering and static page generation, while the Cloudflare adapter packages the output as a Worker.
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Framework | SvelteKit (with `@sveltejs/adapter-cloudflare`) |
+| Language | TypeScript + Svelte |
+| Build tool | Vite + Vitest |
+| Deployment | Cloudflare Workers |
+| Data sources | Google Calendar API, GitHub GraphQL API, local JSON |
+| Styling | Scoped Svelte styles + `/static/global.css` |
+
+## Directory structure
+
+```text
+acmcsuf.com/
+├── src/
+│   ├── routes/
+│   │   └── (site)/          # All page routes
+│   ├── lib/
+│   │   ├── components/      # Reusable Svelte components
+│   │   ├── server/          # Server-only modules
+│   │   └── public/          # Shared client + server code
+│   └── hooks.server.ts      # SvelteKit server hooks
+├── static/
+│   ├── global.css           # Global styles and CSS variables
+│   ├── assets/              # Images and static assets
+│   └── people/              # Board member headshots
+├── svelte.config.js         # SvelteKit + adapter configuration
+├── vite.config.ts           # Vite and Vitest configuration
+└── wrangler.toml            # Cloudflare Workers configuration
+```
+
+## How it fits together
+
+SvelteKit's file-based router maps files in `src/routes/(site)/` to production URLs. Each route can have a `+page.svelte` for the UI and a `+page.ts` for data loading. Server-only logic (API calls, environment variable access) lives in `src/lib/server/`. Shared type definitions and utilities live in `src/lib/public/`.
+
+At build time, the Cloudflare adapter compiles the app to `.svelte-kit/cloudflare/`. Wrangler then deploys that output as a Worker. The `src/hooks.server.ts` file intercepts every request before routing — handling the URL shortener and theme cookie.
+
+<Note>
+The `(site)` directory in the routes path is a SvelteKit route group. The parentheses mean it does not appear in the production URL.
+</Note>
+
+## Explore the architecture
+
+<CardGroup cols={2}>
+  <Card title="Routes" icon="map" href="/architecture/routes">
+    File-based routing: how pages map to production URLs
+  </Card>
+  <Card title="Components" icon="puzzle" href="/architecture/components">
+    Reusable Svelte components in `src/lib/components/`
+  </Card>
+  <Card title="Static assets" icon="image" href="/architecture/static-assets">
+    Global CSS, images, headshots, and favicons
+  </Card>
+  <Card title="Data sources" icon="database" href="/architecture/data-sources">
+    GitHub Discussions, Google Calendar, and local JSON
+  </Card>
+  <Card title="Environment variables" icon="key" href="/architecture/environment-variables">
+    All required and optional environment variables
+  </Card>
+  <Card title="Server library" icon="server" href="/architecture/server-lib">
+    Server-only modules in `src/lib/server/`
+  </Card>
+</CardGroup>

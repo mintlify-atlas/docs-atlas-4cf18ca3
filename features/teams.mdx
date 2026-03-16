@@ -1,0 +1,154 @@
+---
+title: "Teams"
+description: "The teams page lists all ACM at CSUF board members organised by team, with a semester selector backed by officers.json."
+---
+
+The teams page at `acmcsuf.com/teams` displays the full board member directory. Officers are grouped by team and can be filtered by semester using a dropdown selector. Data is stored in static JSON files under `src/lib/public/board/data/`.
+
+## Teams
+
+ACM at CSUF has eleven teams listed on the page:
+
+<CardGroup cols={3}>
+  <Card title="General" icon="building">
+    Manages operations, organises events, and keeps ACM running.
+  </Card>
+  <Card title="AI" icon="microchip">
+    Covers artificial intelligence and machine learning for beginners.
+  </Card>
+  <Card title="Algo" icon="code">
+    Focuses on data structures, algorithms, and interview prep.
+  </Card>
+  <Card title="Design" icon="pen-nib">
+    Teaches UI/UX design principles and product management.
+  </Card>
+  <Card title="Dev" icon="laptop-code">
+    Runs semester-long software development projects.
+  </Card>
+  <Card title="Game Dev" icon="gamepad">
+    Covers game design principles and game programming.
+  </Card>
+  <Card title="ICPC" icon="trophy">
+    Prepares students for the Intercollegiate Competitive Programming Contest.
+  </Card>
+  <Card title="Marketing" icon="bullhorn">
+    Handles advertising and event promotion.
+  </Card>
+  <Card title="Node Buds" icon="handshake">
+    A big-little mentorship program pairing new and experienced members.
+  </Card>
+  <Card title="Open Source" icon="code-branch">
+    Contributes to open-source projects and teaches collaborative development.
+  </Card>
+  <Card title="Special Events" icon="calendar-star">
+    Plans and executes major community events.
+  </Card>
+</CardGroup>
+
+## Data files
+
+All board data lives in `src/lib/public/board/data/`:
+
+| File | Purpose |
+|---|---|
+| `officers.json` | Array of all officers with positions per semester |
+| `teams.json` | Team metadata (id, title, color, logo paths) |
+| `tiers.json` | Tier definitions used to sort positions within a team |
+| `terms.ts` | Ordered list of visible semesters |
+| `teams.ts` | Exports `TEAMS` record keyed by team ID |
+
+## TypeScript types
+
+Defined in `src/lib/public/board/types.ts`:
+
+```ts
+enum Term {
+  Spring21 = 'S21', Fall21 = 'F21',
+  Spring22 = 'S22', Fall22 = 'F22',
+  Spring23 = 'S23', Fall23 = 'F23',
+  Spring24 = 'S24', Fall24 = 'F24',
+  Spring25 = 'S25', Fall25 = 'F25',
+  Spring26 = 'S26',
+}
+
+interface Position {
+  title: string; // e.g. "Webmaster", "AI Director"
+  tier: number;  // references Tier.id for sort order
+}
+
+interface Officer {
+  fullName: string;
+  picture?: string;   // filename under /people/
+  positions: {
+    [key in Term]?: Position[];
+  };
+  discord?: string;   // Discord handle
+  displayName?: string;
+}
+
+interface Team {
+  id: string;
+  title: string;
+  description?: string;
+  color: string;      // CSS colour value
+  logoSrc: string;    // path to SVG asset
+  oldLogoSrc?: string;
+  tiers?: number[];   // tier IDs that belong to this team
+}
+
+interface Tier {
+  id: number;
+  index: number; // lower index = higher tier
+}
+```
+
+## Updating officer data
+
+### Directly in officers.json
+
+<Steps>
+  <Step title="Open officers.json">
+    Edit `src/lib/public/board/data/officers.json`. Each entry is an `Officer` object.
+  </Step>
+  <Step title="Add or update a position">
+    Positions are keyed by term code (e.g. `"F25"`, `"S26"`). Each term maps to an array of `Position` objects:
+
+    ```json
+    {
+      "fullName": "Jane Doe",
+      "picture": "jane-doe.webp",
+      "discord": "@janedoe",
+      "positions": {
+        "S26": [
+          { "title": "AI Director", "tier": 10 }
+        ]
+      }
+    }
+    ```
+  </Step>
+  <Step title="Add a profile photo">
+    Place the officer's photo (`.webp` format) in the `static/people/` directory using the filename referenced in `picture`.
+  </Step>
+  <Step title="Open a pull request">
+    Submit a PR targeting the `main` branch. The change goes live after merge and deployment.
+  </Step>
+</Steps>
+
+### Via the Boardify Discord command
+
+Board members can update their own profile photo using the `/boardd` slash command in the ACM at CSUF Discord server. See the [Boardify](/features/boardify) page for details.
+
+## Semester selector
+
+The page includes a `<Select>` dropdown populated from `VISIBLE_TERMS`:
+
+```ts
+// src/lib/public/board/data/terms.ts
+export const VISIBLE_TERMS = [
+  Term.Spring26, Term.Fall25, Term.Spring25, Term.Fall24,
+  Term.Spring24, Term.Fall23, Term.Spring23, Term.Fall22,
+  Term.Spring22, Term.Fall21, Term.Spring21,
+];
+```
+
+Term codes are formatted for display as `"Spring 2026"`, `"Fall 2025"`, etc. by the `formatTerm()` helper in `+page.svelte`.

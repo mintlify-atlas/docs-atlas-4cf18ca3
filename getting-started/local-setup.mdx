@@ -1,0 +1,133 @@
+---
+title: "Local setup"
+description: "Prerequisites, forking, cloning, and configuring your environment for acmcsuf.com development."
+---
+
+## Prerequisites
+
+Before you begin, make sure the following tools are installed on your machine.
+
+| Tool | Required version |
+|---|---|
+| [Node.js](https://nodejs.org/en/download/) | `>=22.0.0` |
+| [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) | `>=10.5.1` |
+| [Git](https://git-scm.com/downloads) | Any recent version |
+
+<Tip>
+  Install the **LTS** release of Node.js — it will satisfy the `>=22` requirement
+  and receive long-term security updates.
+</Tip>
+
+## Setup steps
+
+<Steps>
+  <Step title="Fork the repository">
+    Create a personal fork of
+    [acmcsuf.com](https://github.com/acmcsufoss/acmcsuf.com) on GitHub. This
+    gives you a copy under your account where you can freely push branches.
+
+    If this is your first time contributing to an open-source project, check out
+    [acmcsuf.com/1st/](https://acmcsuf.com/1st/) for a walkthrough.
+  </Step>
+
+  <Step title="Clone your fork">
+    Create a local clone of **your forked** repository — not the upstream one.
+
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/acmcsuf.com.git
+    cd acmcsuf.com
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    npm i
+    ```
+
+    This installs Svelte, TypeScript, Vite, and all other packages listed in
+    `package.json`.
+  </Step>
+
+  <Step title="Copy the example env file">
+    ```bash
+    cp .env.example .env
+    ```
+
+    The `.env` file is listed in `.gitignore` and will never be committed.
+    Edit the values inside `.env` as described in the next section.
+  </Step>
+
+  <Step title="Start the development server">
+    ```bash
+    npm run dev
+    ```
+
+    Open [http://localhost:5173/](http://localhost:5173/) to see the site.
+    Changes to source files trigger an automatic page reload.
+  </Step>
+</Steps>
+
+## Environment variables
+
+The `.env.example` file documents every variable the project uses. Copy it to
+`.env` and fill in the values you need.
+
+```sh .env
+DEBUG_FLAG_ENABLED=1
+
+GH_DISCUSSION_CATEGORY_ID="DIC_kwDOE7ysSc4CAC0o"
+GH_ACCESS_TOKEN="YOUR_PAT"
+
+GCAL_API_KEY=""
+GCAL_ID=""
+GDRIVE_GALLERY_API_KEY=""
+GDRIVE_GALLERY_FOLDER_ID=""
+
+CLOUDFLARE_ACCOUNT_ID=""
+```
+
+### Variable reference
+
+#### `GH_ACCESS_TOKEN`
+
+A personal GitHub access token (PAT) used to authenticate requests to the
+GitHub API (for example, to load `/blog` posts from GitHub Discussions) and to
+prevent unauthenticated rate limiting.
+
+Generate a token at [github.com/settings/tokens](https://github.com/settings/tokens)
+and set it as the value of `GH_ACCESS_TOKEN` in your `.env`.
+
+<Note>
+  If you are only running tests and not working on a page that fetches from
+  GitHub, you do not need a real token. Leave `GH_ACCESS_TOKEN="💖"` (the
+  placeholder from `.env.example`) or set it to an empty string.
+</Note>
+
+#### `GH_DISCUSSION_CATEGORY_ID`
+
+The GraphQL node ID of the GitHub Discussions category used for newsletter/blog
+posts. The default value in `.env.example` is already correct for the main
+repository:
+
+```
+GH_DISCUSSION_CATEGORY_ID=DIC_kwDOE7ysSc4CAC0o
+```
+
+#### `DEBUG_FLAG_ENABLED`
+
+Set to `1` to enable debug mode. The `.env.example` ships with this turned on
+so that local development shows extra diagnostic information.
+
+#### `GCAL_API_KEY` and `GCAL_ID`
+
+Google Calendar API key and calendar ID, used to fetch event data for the
+calendar page. Leave empty if you are not working on calendar-related features.
+
+#### `GDRIVE_GALLERY_API_KEY` and `GDRIVE_GALLERY_FOLDER_ID`
+
+Google Drive credentials for loading the photo gallery. Leave empty if you are
+not working on the gallery.
+
+#### `CLOUDFLARE_ACCOUNT_ID`
+
+Required only for deployment via Wrangler. Leave empty for local development.

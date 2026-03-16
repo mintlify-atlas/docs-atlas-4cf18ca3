@@ -1,0 +1,120 @@
+---
+title: "Manual deployment"
+description: "Step-by-step guide to deploying acmcsuf.com manually to Cloudflare Workers using Wrangler."
+---
+
+## Overview
+
+While the site deploys automatically via Cloudflare's GitHub integration on every push to `main`, maintainers with sufficient Cloudflare account permissions can trigger a deployment manually using the Wrangler CLI.
+
+## Prerequisites
+
+<CardGroup cols={2}>
+  <Card title="Wrangler CLI" icon="terminal">
+    Wrangler is installed as a dev dependency (`wrangler ^4.59.2`). It is available after running `npm install` — no global install needed.
+  </Card>
+  <Card title="Cloudflare permissions" icon="shield-check">
+    You must have deploy permissions on the `acmcsuf-com` Worker in the Cloudflare account. Contact the current Webmaster if you need access.
+  </Card>
+</CardGroup>
+
+## Production deployment
+
+<Warning>
+  A `.env.production` file with the correct production variables must exist at the project root before deploying. Without it, `wrangler deploy` will be missing required environment values. **Never commit this file to the repository.**
+</Warning>
+
+<Steps>
+  <Step title="Install dependencies">
+    If you haven't already, install all npm packages:
+
+    ```bash
+    npm install
+    ```
+  </Step>
+
+  <Step title="Create .env.production">
+    Ensure your `.env.production` file is present and contains the correct values:
+
+    ```bash
+    DEBUG_FLAG_ENABLED=0              # Must be 0 in production
+    CLOUDFLARE_ACCOUNT_ID="your-id"   # Required if you have access to multiple Cloudflare accounts
+    ```
+  </Step>
+
+  <Step title="Build and deploy">
+    Run the all-in-one deploy script, which builds the site in production mode and then deploys it:
+
+    ```bash
+    npm run deploy
+    ```
+
+    This is equivalent to running:
+
+    ```bash
+    vite build --mode production
+    wrangler deploy -e production
+    ```
+  </Step>
+
+  <Step title="Verify the deployment">
+    Once Wrangler finishes uploading, it will print the live URL. Open [https://acmcsuf.com](https://acmcsuf.com) to confirm the deployment succeeded.
+  </Step>
+</Steps>
+
+## Preview (live) deployment
+
+To upload a new version as a live preview without promoting it to production, use:
+
+```bash
+npm run preview:live
+```
+
+This runs `vite build --mode production && wrangler versions upload -e production`, which uploads the build as a versioned preview. The generated URL follows the pattern:
+
+```
+<VERSION_PREFIX>-acmcsuf-com.<subdomain>.workers.dev
+```
+
+To attach a named alias to the preview (useful for sharing a specific in-progress feature):
+
+```bash
+vite build --mode production
+wrangler versions upload -e production --preview-alias feature-name
+```
+
+The aliased URL will be:
+
+```
+feature-name-acmcsuf-com.<subdomain>.workers.dev
+```
+
+## Local preview (dev server)
+
+To run the site locally against a Wrangler dev environment (simulates the Workers runtime):
+
+```bash
+npm run preview
+```
+
+This runs `npm run build && wrangler dev`, which builds with the default (non-production) mode and starts a local Workers-compatible server.
+
+## Available deploy-related scripts
+
+| Script | Command | Description |
+|---|---|---|
+| `npm run deploy` | `vite build --mode production && wrangler deploy -e production` | Full production build and deploy |
+| `npm run build:prod` | `vite build --mode production` | Production build only (no deploy) |
+| `npm run preview:live` | `npm run build:prod && wrangler versions upload -e production` | Upload as a versioned live preview |
+| `npm run preview` | `npm run build && wrangler dev` | Local Wrangler dev server |
+| `npm run test:size` | `npm run build && size-limit` | Verify `_worker.js` is under 50 KB |
+
+## Rolling back
+
+If a bad deploy reaches production, you can roll back to any previous version from the Cloudflare dashboard (Workers > `acmcsuf-com` > Deployments) or via the CLI:
+
+```bash
+wrangler versions list -e production
+```
+
+Then promote the desired version from the Cloudflare dashboard or using the Wrangler versions API.
