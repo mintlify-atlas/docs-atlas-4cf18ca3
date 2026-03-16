@@ -1,0 +1,124 @@
+{
+  "projectType": "saas",
+  "projectName": "ACM at CSUF",
+  "projectDescription": "The official SvelteKit-powered website for CSUF's ACM chapter, featuring events, blog, team profiles, workshops, hackathons, and member tools.",
+  "theme": "almond",
+  "primaryColor": "#08a2f8",
+  "lightColor": "#64bfe7",
+  "darkColor": "#040404",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Overview",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "getting-started/quickstart", "getting-started/local-setup"]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/overview",
+              "contributing/submitting-a-pr",
+              "contributing/environment-setup"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Architecture",
+        "groups": [
+          {
+            "group": "Project Structure",
+            "pages": [
+              "architecture/overview",
+              "architecture/routes",
+              "architecture/components",
+              "architecture/static-assets"
+            ]
+          },
+          {
+            "group": "Data & Configuration",
+            "pages": [
+              "architecture/data-sources",
+              "architecture/environment-variables",
+              "architecture/server-lib"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Features",
+        "groups": [
+          {
+            "group": "Website Pages",
+            "pages": [
+              "features/home",
+              "features/blog",
+              "features/events",
+              "features/teams",
+              "features/workshops",
+              "features/hackathons"
+            ]
+          },
+          {
+            "group": "Member Tools",
+            "pages": [
+              "features/lc-dailies",
+              "features/boardify",
+              "features/shorter",
+              "features/branding"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Deployment",
+        "groups": [
+          {
+            "group": "Deploy",
+            "pages": [
+              "deployment/cloudflare-workers",
+              "deployment/ci-cd",
+              "deployment/manual-deploy"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "SvelteKit-based website with SSR and Cloudflare Workers deployment",
+    "Events page powered by Google Calendar API",
+    "Blog powered by GitHub Discussions",
+    "Team/board member directory with dynamic data from JSON",
+    "LeetCode Dailies leaderboard and season tracking",
+    "Boardify Discord slash command integration for board member updates",
+    "Shorter URL shortlink management via Discord",
+    "Branding assets and design gallery",
+    "Workshops listing by team",
+    "Hackathons page",
+    "RSS feed and sitemap generation",
+    "QR code generation and link shortening"
+  ],
+  "publicApiSurface": [
+    "GET /events - Events listing page",
+    "GET /events/[query].json - Events data API",
+    "GET /blog - Blog listing page",
+    "GET /blog/[id] - Individual blog post",
+    "GET /blog/[id].txt - Blog post as plain text",
+    "GET /blog/[query].json - Blog data API",
+    "GET /teams - Board member directory",
+    "GET /workshops/[team] - Workshops by team",
+    "GET /hackathons - Hackathons listing",
+    "GET /lc-dailies - LeetCode Dailies leaderboard",
+    "GET /lc-dailies/[season_id] - Season-specific leaderboard",
+    "GET /branding - Branding assets page",
+    "GET /boardify - Boardify Discord integration info",
+    "GET /shorter - URL shortlink manager info",
+    "GET /feed.xml - RSS feed",
+    "GET /sitemap - Sitemap",
+    "GET /[...id=link].svg - Dynamic SVG via shortlink",
+    "GET /[x+40][username] - User profile redirect"
+  ]
+}
